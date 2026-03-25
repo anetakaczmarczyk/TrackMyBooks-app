@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "BiblioTrack – Twoja cyfrowa biblioteka",
+  title: "Track My Books – Twoja cyfrowa biblioteka",
   description: "Śledź swoją czytelniczą podróż. Kataloguj książki, odkrywaj nowości i dziel się rekomendacjami.",
 };
 

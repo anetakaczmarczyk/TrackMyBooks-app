@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
 
 const BG_BOOKS = [
   "https://covers.openlibrary.org/b/id/8758191-L.jpg",
@@ -36,7 +38,7 @@ export default function RegisterPage() {
 
   const strength = (() => {
     if (!password) return 0;
-    let s = 0;
+    let s = 1;
     if (password.length >= 8) s++;
     if (/[A-Z]/.test(password)) s++;
     if (/[0-9]/.test(password)) s++;
@@ -47,6 +49,7 @@ export default function RegisterPage() {
   const strengthLabel = ["", "Słabe", "Średnie", "Dobre", "Silne"][strength];
   const strengthColor = ["", "#e05252", "#e09452", "#c9a84c", "#52b788"][strength];
 
+  const emailValid = (() => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))();
   return (
     
 
@@ -62,7 +65,7 @@ export default function RegisterPage() {
           <div className="left-content">
             <a href="/" className="logo">
               <div className="logo-icon">📚</div>
-              <span className="logo-text">Biblio<span>Track</span></span>
+              <span className="logo-text">Track <span>My</span> Books</span>
             </a>
             <div className="perks">
               <div>
@@ -81,13 +84,13 @@ export default function RegisterPage() {
                 <div className="perk-icon-wrap">🌟</div>
                 <div className="perk-text">
                   <h3>Spersonalizowane rekomendacje</h3>
-                  <p>AI dobiera tytuły dopasowane do Twojego gustu.</p>
+                  <p>Dobieranie tytułów dopasowanych do Twojego gustu.</p>
                 </div>
               </div>
               <div className="perk-item">
                 <div className="perk-icon-wrap">📊</div>
                 <div className="perk-text">
-                  <h3>Roczne podsumowania</h3>
+                  <h3>Podsumowania</h3>
                   <p>Twoje czytelnicze statystyki i osiągnięcia.</p>
                 </div>
               </div>
@@ -124,18 +127,9 @@ export default function RegisterPage() {
                 </h1>
                 <p className="form-subtitle">Zarejestruj się i śledź swoją czytelniczą podróż.</p>
 
-                <div className="social-btns">
-                  <button className="social-login-btn">
-                    <span>G</span> Google
-                  </button>
-                  <button className="social-login-btn">
-                    <span>f</span> Facebook
-                  </button>
-                </div>
-
                 <div className="divider">
                   <span className="divider-line" />
-                  <span className="divider-text">lub podaj dane</span>
+                  <span className="divider-text">Podaj dane</span>
                   <span className="divider-line" />
                 </div>
 
@@ -166,8 +160,13 @@ export default function RegisterPage() {
                       onBlur={() => setFocused(null)}
                     />
                     <span className="input-icon">✉</span>
-                  </div>
                 </div>
+                  {email && (
+                    <div >
+                      <span className="strength-label" style={{ color: "#e05252" }}>{emailValid ? "" : "Nieprawidłowy adres e-mail"}</span>
+                    </div>
+                  )}
+                  </div>
 
                 <div className={`field ${focused === "password" ? "active" : ""}`}>
                   <label>Hasło</label>
@@ -208,14 +207,14 @@ export default function RegisterPage() {
                 <button
                   className="btn-submit"
                   onClick={() => setStep(2)}
-                  disabled={!name || !email || !password || password.length < 6}
+                  disabled={!name || !email || !password || !emailValid || strength < 2}
                 >
                   Dalej →
                 </button>
 
                 <div className="form-footer">
                   Masz już konto?{" "}
-                  <a href="/logowanie">Zaloguj się</a>
+                  <Link href="/login">Zaloguj się</Link>
                 </div>
               </div>
             )}

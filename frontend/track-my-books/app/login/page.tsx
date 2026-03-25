@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/dist/client/link";
 import { useState } from "react";
 
 const BG_BOOKS = [
@@ -37,7 +38,7 @@ export default function LoginPage() {
           <div className="left-content">
             <a href="/" className="logo">
               <div className="logo-icon">📚</div>
-              <span className="logo-text">Biblio<span>Track</span></span>
+              <span className="logo-text">Track <span>My</span> Books</span>
             </a>
             <div className="left-quote">
               <span className="quote-mark">"</span>
@@ -58,27 +59,17 @@ export default function LoginPage() {
               <span className="eyebrow-line" />
             </div>
             <h1 className="form-title">
-              Zaloguj się<br />do <em>BiblioTrack</em>
+              Zaloguj się<br />do <em>Track My Books</em>
             </h1>
             <p className="form-subtitle">
               Kontynuuj swoją czytelniczą podróż.
             </p>
 
-            {/* Social */}
-            <div className="social-btns">
-              <button className="social-login-btn">
-                <span className="social-icon">G</span>
-                Google
-              </button>
-              <button className="social-login-btn">
-                <span className="social-icon">f</span>
-                Facebook
-              </button>
-            </div>
+
 
             <div className="divider">
               <span className="divider-line" />
-              <span className="divider-text">lub przez e-mail</span>
+              <span className="divider-text">Zaloguj się</span>
               <span className="divider-line" />
             </div>
 
@@ -134,7 +125,7 @@ export default function LoginPage() {
 
             <div className="form-footer">
               Nie masz konta?{" "}
-              <a href="/rejestracja">Zarejestruj się za darmo →</a>
+              <Link href="/signup">Zarejestruj się za darmo →</Link>
             </div>
           </div>
         </div>

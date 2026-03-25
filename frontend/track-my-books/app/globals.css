@@ -84,10 +84,12 @@ body {
   transition: all 0.2s;
   font-family: 'DM Sans', sans-serif;
   text-transform: uppercase;
+  text-decoration: none;
 }
 .btn-ghost:hover {
   border-color: var(--gold);
   background: rgba(201, 168, 76, 0.08);
+  text-decoration: none;
 }
 
 .btn-gold {
@@ -103,8 +105,11 @@ body {
   text-transform: uppercase;
   font-family: 'DM Sans', sans-serif;
   transition: opacity 0.2s;
+  text-decoration: none;
 }
-.btn-gold:hover { opacity: 0.85; }
+.btn-gold:hover { 
+   opacity: 0.85;
+   text-decoration: none; }
 
 .btn-submit {
   width: 100%;
@@ -192,7 +197,7 @@ nav.scrolled {
    HERO (home page)
 ───────────────────────────────────────── */
 .hero {
-  min-height: 100vh;
+  min-height: 60vh;
   display: flex;
   align-items: center;
   padding: 120px 48px 80px;
@@ -723,10 +728,11 @@ footer {
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  overflow: hidden;
   padding: 60px 48px;
   background: var(--bg);
   position: relative;
-  overflow-y: auto;
+
 }
 .right-panel::before {
   content: '';
