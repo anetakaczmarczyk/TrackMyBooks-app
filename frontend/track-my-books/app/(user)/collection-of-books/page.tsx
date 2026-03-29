@@ -1,10 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import Nav from "@/components/Nav";
+import {Navbar} from "@/_components/Navbar";
+import { Footer } from "@/_components/Footer";
 
-const STATUSES = ["Czytam teraz", "Przeczytane", "Chcę przeczytać", "Porzucone"];
+const STATUSES = ["Czytam teraz", "Przeczytane", "Chcę przeczytać", "Porzucone", "Listy książek"];
 
+
+// To change later to fetching from API
 const LIBRARY: Record<string, {
   id: number; title: string; author: string; cover: string;
   rating?: number; progress?: number; pages: number; addedDate: string;
@@ -27,13 +30,19 @@ const LIBRARY: Record<string, {
   "Porzucone": [
     { id: 10, title: "Bracia Karamazow", author: "Fiodor Dostojewski", cover: "https://covers.openlibrary.org/b/id/8091016-L.jpg", pages: 796, addedDate: "3 lut 2026" },
   ],
+  "Listy książek": [
+    { id: 11, title: "Ulubione książki 2025", author: "Mój wybór", cover: "https://covers.openlibrary.org/b/id/11111111-L.jpg", pages: 0, addedDate: "30 gru 2025" },
+  ],
 };
+
+
 
 const STATUS_ICONS: Record<string, string> = {
   "Czytam teraz":       "📖",
   "Przeczytane":        "✅",
-  "Chcę przeczytać":   "🔖",
+  "Chcę przeczytać":    "🔖",
   "Porzucone":          "💤",
+  "Listy książek":      "📚",
 };
 
 function Stars({ rating }: { rating?: number }) {
@@ -55,7 +64,7 @@ export default function LibraryPage() {
 
   return (
     <>
-      <Nav active="/biblioteczka" />
+      <Navbar />
 
       <div className="inner-page">
         <div className="page-header">
@@ -67,7 +76,6 @@ export default function LibraryPage() {
             <h1 className="page-title">Moja biblioteczka</h1>
             <p className="page-subtitle">{totalBooks} książek · {readBooks} przeczytanych</p>
           </div>
-          <button className="btn-gold">+ Dodaj książkę</button>
         </div>
 
         {/* Status tabs */}
@@ -84,7 +92,28 @@ export default function LibraryPage() {
           ))}
         </div>
 
-        {/* Cards */}
+        {status === 'Listy książek' ? (
+          <div className="profile-content">
+            <div className="lists-grid">
+              {[
+                { name: "Sci-Fi must-read", count: 7, emoji: "🚀" },
+                { name: "Klasyka do śmierci", count: 12, emoji: "📜" },
+                { name: "Polecam znajomym", count: 4, emoji: "🎁" },
+              ].map(l => (
+                <div className="list-card" key={l.name}>
+                  <span className="list-emoji">{l.emoji}</span>
+                  <span className="list-name">{l.name}</span>
+                  <span className="list-count">{l.count} książek</span>
+                </div>
+              ))}
+              <div className="list-card list-add">
+                <span className="list-emoji">+</span>
+                <span className="list-name">Nowa lista</span>
+              </div>
+            </div>
+          </div>
+        ) : (
+        // {/* Cards */}
         <div className="lib-grid">
           {books.map(book => (
             <div className="lib-card" key={book.id}>
@@ -141,7 +170,9 @@ export default function LibraryPage() {
             </div>
           </div>
         </div>
+        )}  
       </div>
+      <Footer />
     </>
   );
 }

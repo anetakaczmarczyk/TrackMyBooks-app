@@ -1,8 +1,8 @@
 "use client";
 
-import { Slider } from "@/components/BookSlider";
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
+import { Slider } from "@/_components/BookSlider";
+import { Navbar } from "@/_components/Navbar";
+import { Footer } from "@/_components/Footer";
 import Link from "next/link";
 
 const BOOKS_TRENDING = [

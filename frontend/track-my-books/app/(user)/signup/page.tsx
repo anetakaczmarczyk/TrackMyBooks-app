@@ -23,6 +23,7 @@ const GENRES = ["Klasyka", "Sci-Fi", "Fantasy", "Kryminał", "Romans", "Historia
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
+  const [nick, setNick] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
@@ -148,6 +149,21 @@ export default function RegisterPage() {
                   </div>
                 </div>
 
+                <div className={`field ${focused === "name" ? "active" : ""}`}>
+                  <label>Nazwa użytkownika</label>
+                  <div className="input-wrap">
+                    <input
+                      type="text"
+                      placeholder="jkowalski"
+                      value={nick}
+                      onChange={e => setNick(e.target.value)}
+                      onFocus={() => setFocused("nick")}
+                      onBlur={() => setFocused(null)}
+                    />
+                    <span className="input-icon">👥</span>
+                  </div>
+                </div>
+
                 <div className={`field ${focused === "email" ? "active" : ""}`}>
                   <label>Adres e-mail</label>
                   <div className="input-wrap">
@@ -207,7 +223,7 @@ export default function RegisterPage() {
                 <button
                   className="btn-submit"
                   onClick={() => setStep(2)}
-                  disabled={!name || !email || !password || !emailValid || strength < 2}
+                  disabled={!name || !nick || !email || !password || !emailValid || strength < 2}
                 >
                   Dalej →
                 </button>

@@ -1,0 +1,9 @@
+/contact - send message
+/login - i forgot password
+/settings - show/hide edit when user is on his own profile/ other's profile
+/profile - add clickable books, showing lists, adding new lists,
+/collection-of-books - add changeing statuses, clickable books, showing lists, adding new lists
+/recommendations - if user is logged
+add to login navigation friends, settings, statistics, profile
+footer - check after done all pages! and add links
+different navigation if user is logged

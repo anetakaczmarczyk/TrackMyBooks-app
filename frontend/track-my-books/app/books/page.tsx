@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Nav from "@/components/Nav";
+import {Navbar} from "@/_components/Navbar";
 
 const GENRES = ["Wszystkie", "Klasyka", "Sci-Fi", "Fantasy", "Kryminał", "Romans", "Historia", "Thriller", "Biografia", "Dystopia"];
 
@@ -48,7 +48,7 @@ export default function BooksPage() {
 
   return (
     <>
-      <Nav active="/ksiazki" />
+      <Navbar />
 
       <div className="inner-page">
         {/* Header */}
@@ -59,7 +59,6 @@ export default function BooksPage() {
               <span className="eyebrow-line" />
             </div>
             <h1 className="page-title">Książki</h1>
-            <p className="page-subtitle">Przeglądaj naszą bazę ponad 1,2 miliona tytułów.</p>
           </div>
 
           {/* Search */}

@@ -1,3 +1,4 @@
+"use client";
 import Link from "next/link"
 import { useEffect, useState } from "react";
 
@@ -15,8 +16,8 @@ export function Navbar() {
           <span className="logo-text">Track <span>My</span> Books</span>
         </Link>
         <ul className="nav-links">
-          <li><Link href="/ksiazki">Książki</Link></li>
-          <li><Link href="/rekomendacje">Rekomendacje</Link></li>
+          <li><Link href="/books">Książki</Link></li>
+          <li><Link href="/recommendations">Rekomendacje</Link></li>
         </ul>
         <div className="nav-auth">
           <Link className="btn-ghost" href="/login">Zaloguj</Link>

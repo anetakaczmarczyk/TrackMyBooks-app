@@ -13,37 +13,28 @@ export function Footer() {
           <div className="footer-col">
             <h4>Produkt</h4>
             <ul>
-              <li><Link href="#">Książki</Link></li>
-              <li><Link href="#">Rekomendacje</Link></li>
-              <li><Link href="#">Statystyki</Link></li>
-              <li><Link href="#">Listy lektur</Link></li>
+              <li><Link href="/books">Książki</Link></li>
+              <li><Link href="/recommendations">Rekomendacje</Link></li>
             </ul>
           </div>
           <div className="footer-col">
             <h4>Firma</h4>
             <ul>
-              <li><Link href="#">O nas</Link></li>
-              <li><Link href="#">Blog</Link></li>
-              <li><Link href="#">Kariera</Link></li>
-              <li><Link href="#">Kontakt</Link></li>
+              <li><Link href="/about">O nas</Link></li>
+              <li><Link href="/contact">Kontakt</Link></li>
             </ul>
           </div>
           <div className="footer-col">
             <h4>Prawne</h4>
             <ul>
-              <li><Link href="#">Regulamin</Link></li>
-              <li><Link href="#">Prywatność</Link></li>
-              <li><Link href="#">Cookies</Link></li>
+              <li><Link href="/terms">Regulamin</Link></li>
+              <li><Link href="/privacy?tab=privacy">Prywatność</Link></li>
+              <li><Link href="/privacy?tab=cookies">Cookies</Link></li>
             </ul>
           </div>
         </div>
         <div className="footer-bottom">
           <p>© 2026 Track My Books. Wszystkie prawa zastrzeżone.</p>
-          <div className="footer-social">
-            <Link href="#" className="social-btn">𝕏</Link>
-            <Link href="#" className="social-btn">in</Link>
-            <Link href="#" className="social-btn">ig</Link>
-          </div>
         </div>
       </footer>
   );

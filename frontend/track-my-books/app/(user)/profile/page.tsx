@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import Nav from "@/components/Nav";
+import Link from "next/link";
+import {Navbar} from "@/_components/Navbar";
+import { Footer } from "@/_components/Footer";
 
 const RECENT_BOOKS = [
   { id: 1, title: "Dune", author: "Frank Herbert", cover: "https://covers.openlibrary.org/b/id/8758191-L.jpg", rating: 5 },
@@ -43,11 +45,10 @@ function Stars({ n }: { n: number }) {
 
 export default function ProfilePage() {
   const [tab, setTab] = useState("Przegląd");
-  const [editing, setEditing] = useState(false);
-
+  const editing = false; // For demo purposes, we can toggle this to show/hide the edit button, to change if user is looking at their own profile or someone else's, etc.
   return (
     <>
-      <Nav active="/profil" />
+      <Navbar />
 
       <div className="inner-page">
 
@@ -58,9 +59,9 @@ export default function ProfilePage() {
             <div className="profile-avatar-wrap">
               <div className="profile-avatar">AK</div>
               {!editing && (
-                <button className="profile-edit-btn" onClick={() => setEditing(true)}>
+                <Link className="profile-edit-btn" href="/settings">
                   ✏️ Edytuj
-                </button>
+                </Link>
               )}
             </div>
             <div className="profile-meta">
@@ -202,6 +203,7 @@ export default function ProfilePage() {
           </div>
         )}
       </div>
+      <Footer />
     </>
   );
 }

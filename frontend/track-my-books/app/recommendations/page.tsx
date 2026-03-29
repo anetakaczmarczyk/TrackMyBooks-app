@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Nav from "@/components/Nav";
+import {Navbar} from "@/_components/Navbar";
 
 const MOODS = [
   { id: "relax",     emoji: "🌿", label: "Relaks",        desc: "Lekkie, przyjemne czytanie" },
@@ -92,7 +92,7 @@ export default function RecommendationsPage() {
 
   return (
     <>
-      <Nav active="/rekomendacje" />
+      <Navbar />
 
       <div className="inner-page">
         {/* Header */}
@@ -103,7 +103,7 @@ export default function RecommendationsPage() {
               <span className="eyebrow-line" />
             </div>
             <h1 className="page-title">Rekomendacje</h1>
-            <p className="page-subtitle">Spersonalizowane propozycje na podstawie Twojej historii czytania.</p>
+            <p className="page-subtitle">Spersonalizowane propozycje.</p>
           </div>
         </div>
 
@@ -125,11 +125,9 @@ export default function RecommendationsPage() {
           </div>
         </section>
 
-        {/* AI recs */}
         <section className="rec-section">
           <div className="section-header-row">
             <h2 className="section-heading">Wybrane dla Ciebie</h2>
-            <span className="ai-badge">✦ AI</span>
           </div>
           <div className="rec-cards">
             {RECS.map((r, i) => (
@@ -140,14 +138,10 @@ export default function RecommendationsPage() {
                   <div className="rec-info">
                     <div className="rec-top">
                       <span className="rec-genre">{r.genre}</span>
-                      <span className="rec-match-badge">{r.match}% dopasowanie</span>
                     </div>
                     <div className="rec-title">{r.title}</div>
                     <div className="rec-author">{r.author}</div>
                     <p className="rec-reason">"{r.reason}"</p>
-                    <div className="rec-tags">
-                      {r.tags.map(t => <span key={t} className="rec-tag">#{t}</span>)}
-                    </div>
                     <div className="rec-actions">
                       <button className="add-btn-sm">+ Dodaj do biblioteczki</button>
                       <span className="book-star">★ {r.rating}</span>

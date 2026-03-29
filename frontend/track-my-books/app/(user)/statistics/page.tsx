@@ -1,6 +1,7 @@
 "use client";
 
-import Nav from "@/components/Nav";
+import { Footer } from "@/_components/Footer";
+import {Navbar} from "@/_components/Navbar";
 
 const MONTHLY = [
   { month: "Paź", books: 1, pages: 328 },
@@ -41,7 +42,7 @@ const READING_LOG = [
 export default function StatsPage() {
   return (
     <>
-      <Nav active="/statystyki" />
+      <Navbar />
 
       <div className="inner-page">
         <div className="page-header">
@@ -180,6 +181,7 @@ export default function StatsPage() {
           </div>
         </div>
       </div>
+      <Footer />
     </>
   );
 }
