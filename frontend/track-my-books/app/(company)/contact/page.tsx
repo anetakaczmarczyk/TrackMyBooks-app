@@ -137,7 +137,7 @@ export default function ContactPage() {
             <div className="contact-info-cards">
               {[
                 { icon: "📞", label: "Telefon",       val: "+48 123 456 789",       sub: "Pon-Pt, 9:00-17:00" },
-                { icon: "✉️", label: "E-mail",         val: "hello@bibliotrack.pl",     sub: "Odpowiadamy w 24h" }
+                { icon: "✉️", label: "E-mail",         val: "hello@trackmybooks.pl",     sub: "Odpowiadamy w 24h" }
               ].map(c => (
                 <div className="contact-info-card" key={c.label}>
                   <span className="contact-info-icon">{c.icon}</span>
