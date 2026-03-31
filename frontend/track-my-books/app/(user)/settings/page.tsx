@@ -7,8 +7,6 @@ import {Navbar} from "@/_components/Navbar";
 const SETTING_TABS = [
   { id: "konto",         icon: "👤", label: "Konto"              },
   { id: "haslo",         icon: "🔒", label: "Hasło i bezpieczeństwo" },
-  { id: "powiadomienia", icon: "🔔", label: "Powiadomienia"      },
-  { id: "prywatnosc",    icon: "🛡️", label: "Prywatność"         },
   { id: "usuniecie",     icon: "⚠️", label: "Usuń konto"         },
 ];
 
@@ -48,18 +46,8 @@ export default function SettingsPage() {
   const [confPass, setConfPass]   = useState("");
   const [showP, setShowP]         = useState(false);
 
-  // Powiadomienia
-  const [notifs, setNotifs] = useState({
-    friendActivity: true, newRec: true, weeklyDigest: true,
-    challenges: false, comments: true, marketing: false,
-    push: false, sms: false,
-  });
 
-  // Prywatność
-  const [privacy, setPrivacy] = useState({
-    publicProfile: true, showLibrary: true, showStats: false, showFriends: true,
-  });
-  const [whoCanFollow, setWhoCanFollow] = useState("Wszyscy");
+
 
 
   const strength = (() => {
@@ -209,82 +197,9 @@ export default function SettingsPage() {
                     Zmień hasło
                   </button>
                 </div>
-
-
-
-                <div className="settings-field-group">
-                  <div className="settings-group-title">Aktywne sesje</div>
-                  <SettingsRow label="Wyloguj ze wszystkich urządzeń" sub="Zakończy wszystkie aktywne sesje oprócz obecnej">
-                    <button className="add-btn-sm">Wyloguj wszystkie</button>
-                  </SettingsRow>
-                </div>
               </div>
             )}
 
-            {/* ── POWIADOMIENIA ── */}
-            {tab === "powiadomienia" && (
-              <div className="settings-panel">
-                <h2 className="settings-panel-title">Powiadomienia</h2>
-
-                <div className="settings-field-group">
-                  <div className="settings-group-title">E-mail</div>
-                  {[
-                    { key: "friendActivity", label: "Aktywność znajomych",  sub: "Gdy znajomy kończy książkę lub pisze recenzję" },
-                    { key: "newRec",         label: "Nowe rekomendacje",    sub: "Cotygodniowe podsumowanie propozycji dla Ciebie" },
-                    { key: "weeklyDigest",   label: "Tygodniowy digest",    sub: "Podsumowanie Twojej aktywności czytelniczej"   },
-                    { key: "comments",       label: "Komentarze",           sub: "Gdy ktoś odpowiada na Twoją recenzję"          },
-                  ].map(n => (
-                    <SettingsRow key={n.key} label={n.label} sub={n.sub}>
-                      <Toggle
-                        on={notifs[n.key as keyof typeof notifs]}
-                        onChange={() => setNotifs(p => ({ ...p, [n.key]: !p[n.key as keyof typeof notifs] }))}
-                      />
-                    </SettingsRow>
-                  ))}
-                </div>
-
-              </div>
-            )}
-
-            {/* ── PRYWATNOŚĆ ── */}
-            {tab === "prywatnosc" && (
-              <div className="settings-panel">
-                <h2 className="settings-panel-title">Prywatność</h2>
-
-                <div className="settings-field-group">
-                  <div className="settings-group-title">Widoczność profilu</div>
-                  {[
-                    { key: "publicProfile", label: "Publiczny profil",       sub: "Twój profil będzie widoczny dla wszystkich" },
-                    { key: "showLibrary",   label: "Pokaż biblioteczkę",    sub: "Inni użytkownicy mogą zobaczyć Twoje książki" },
-                    { key: "showStats",     label: "Pokaż statystyki",       sub: "Publiczne statystyki czytania na profilu"     },
-                    { key: "showFriends",   label: "Pokaż listę znajomych", sub: "Kto może zobaczyć Twoich znajomych"           },
-                  ].map(p => (
-                    <SettingsRow key={p.key} label={p.label} sub={p.sub}>
-                      <Toggle
-                        on={privacy[p.key as keyof typeof privacy]}
-                        onChange={() => setPrivacy(prev => ({ ...prev, [p.key]: !prev[p.key as keyof typeof privacy] }))}
-                      />
-                    </SettingsRow>
-                  ))}
-                </div>
-
-                <div className="settings-field-group">
-                  <div className="settings-group-title">Obserwowanie</div>
-                  <SettingsRow label="Kto może Cię obserwować" sub="Możesz ograniczyć grono obserwujących">
-                    <select className="sort-select" value={whoCanFollow} onChange={e => setWhoCanFollow(e.target.value)}>
-                      {["Wszyscy", "Tylko znajomi", "Nikt"].map(o => <option key={o}>{o}</option>)}
-                    </select>
-                  </SettingsRow>
-                </div>
-
-                <div className="settings-field-group">
-                  <div className="settings-group-title">Dane i prywatność</div>
-                  <SettingsRow label="Polityka prywatności" sub="Przeczytaj jak przetwarzamy Twoje dane">
-                    <Link href="/privacy?tab=privacy" className="settings-ext-link">Otwórz →</Link>
-                  </SettingsRow>
-                </div>
-              </div>
-            )}
 
 
             {/* ── USUŃ KONTO ── */}

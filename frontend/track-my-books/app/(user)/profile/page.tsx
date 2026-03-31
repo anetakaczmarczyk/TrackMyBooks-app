@@ -131,7 +131,7 @@ export default function ProfilePage() {
                     <div className="goal-fill" style={{ width: "46%" }} />
                   </div>
                   <p className="goal-sub" style={{ marginTop: 8 }}>46% celu rocznego · pozostało 13 książek</p>
-                  <a href="/statystyki" className="goal-link">Zobacz pełne statystyki →</a>
+                  <Link href="/statistics" className="goal-link">Zobacz pełne statystyki →</Link>
                 </div>
               </div>
             </div>

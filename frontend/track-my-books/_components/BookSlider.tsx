@@ -53,7 +53,7 @@ export function Slider({ title, books, badge }: { title: string; books: typeof B
           {title}
           {badge && <span className="badge">{badge}</span>}
         </h2>
-        <Link href="/ksiazki" className="see-all">Zobacz wszystkie →</Link>
+        <Link href="/books" className="see-all">Zobacz wszystkie →</Link>
       </div>
       <div className="slider-wrapper">
         {canLeft && (
