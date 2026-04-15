@@ -11,7 +11,7 @@ public class HardcoverClient
     public async Task<List<HardcoverBook>> GetBookByTitle(string title)
     {
         var query = new { 
-            query = "query ($t: String!) { books(where: {title: {_eq: $t}}) { title cached_tags } }",
+            query = "query ($t: String!) { books(where: {title: {_eq: $t}}) { id title cached_contributors cached_image description ratings_count cached_tags } }",
             variables = new { t = title }
         };
 

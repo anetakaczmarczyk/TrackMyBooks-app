@@ -11,5 +11,10 @@ public class BooksController : ControllerBase
     public BooksController(HardcoverClient client) => _client = client;
 
     [HttpGet("{title}")]
-    public async Task<IActionResult> Get(string title) => Ok(await _client.GetBookByTitle(title));
+public async Task<IActionResult> Get(string title) 
+{
+    var data = await _client.GetBookByTitle(title);
+    var bestBook = data.OrderByDescending(b => b.Ratings_Count).FirstOrDefault();
+    return Ok(bestBook); 
+}
 }
