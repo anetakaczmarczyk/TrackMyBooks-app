@@ -37,8 +37,6 @@ async function fetchBooks(startNumber: number, itemsPerPage: number): Promise<Bo
     }
 
     const data = await response.json();
-    console.log("Fetched books:", data);
-    console.log("Release dates:", data.map((book: Book) => book.release_Date));
     return data;
   } catch (error) {
     console.error("Error fetching books:", error);
@@ -60,26 +58,26 @@ export default function BooksPage() {
   useEffect(() => { setPage(1); }, [genre, sort, query]);
 
   useEffect(() => {
+    if (isMounted) return;
     setIsMounted(true);
 
     async function loadBooks() {
       try {
+        setBooks([]);
         setLoading(true);
         const firstBatch = await fetchBooks(0, INITIAL_BATCH);
         setBooks(firstBatch);
 
         let offset = INITIAL_BATCH;
-        while(offset < 10000) {
+        while(offset < 1024) {
           const batch = await fetchBooks(offset, 1000);
           if (batch.length === 0) break;
-          batch.filter(b => b.default_cover_edition_id !== null);
-          for (let book of batch) {
-            if (book.default_cover_edition_id in books.map(b => b.default_cover_edition_id)) {
-              batch.splice(batch.indexOf(book), 1);
-            }
-          }
-          console.log(`Fetched batch of ${batch.length} books (offset: ${offset})`);
-          setBooks(prev => [...prev, ...batch]);
+          const filteredBatch = batch.filter(b => b.default_cover_edition_id !== null);
+          const uniqueBatch = filteredBatch.filter(b => 
+          !books.some(existing => existing.default_cover_edition_id === b.default_cover_edition_id)
+        );
+
+          setBooks(prev => [...prev, ...uniqueBatch]);
           offset += 1000;
         }
         setLoading(false);
@@ -90,13 +88,10 @@ export default function BooksPage() {
         setLoading(false);
       }
     }
+      loadBooks();
 
-    loadBooks();
   }, []);
 
-  if (!isMounted) {
-    return <div className="inner-page">Loading…</div>;
-  }
 
   // ── Filter + sort ──
   const filtered = books
@@ -254,7 +249,7 @@ export default function BooksPage() {
                   />
                   <div className="book-grid-overlay">
                     <button className="add-btn">+ Add to library</button>
-                    <a href="#" className="overlay-detail">Details →</a>
+                    <a href={`/books/${book.default_cover_edition_id}`} className="overlay-detail">Details →</a>
                   </div>
                 </div>
                 <div className="book-grid-info">

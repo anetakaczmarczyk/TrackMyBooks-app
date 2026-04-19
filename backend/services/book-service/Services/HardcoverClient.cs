@@ -11,7 +11,7 @@ public class HardcoverClient
     public async Task<List<HardcoverBook>> GetBooks(int startNumber, int itemsPerPage)
     {
         var query = new { 
-            query = "query GetBooks($startNumber: Int!, $itemsPerPage: Int!) { books(offset: $startNumber, limit: $itemsPerPage, order_by: { id: asc }, where: {ratings_count: {_gt: 5} } ) {default_cover_edition_id release_date cached_image title description cached_tags contributions {author {name}} rating pages ratings_count}}",
+            query = "query GetBooks($startNumber: Int!, $itemsPerPage: Int!) { books(offset: $startNumber, limit: $itemsPerPage, where: {ratings_count: {_gt: 5} } ) {default_cover_edition_id release_date cached_image title description cached_tags contributions {author {name}} rating pages ratings_count}}",
             variables = new { startNumber, itemsPerPage }
         };
 

@@ -24,7 +24,6 @@ export interface Book {
     publisher: {
         name: string;
     }
-    
 }
 
 export interface Author {
@@ -37,4 +36,17 @@ export interface Author {
 
 export interface GenreTag{
     tag: string;
+}
+
+export interface BookByIdResponse {
+    isbn_10: string;
+    isbn_13: string;
+    language: {language: string};
+    publisher: {
+        name: string;
+    }
+    contributions: {
+        author: Author;
+    }[];
+    book: Book;
 }

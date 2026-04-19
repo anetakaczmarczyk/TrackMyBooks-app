@@ -24,6 +24,8 @@ public class BookById
     public string Isbn_13 { get; set; } = string.Empty;
     public LanguageDetail Language { get; set; } = new();
     public BookDetail Book { get; set; } = new();
+    public List<ContributorContainer> Contributions { get; set; } = new();
+    public PublisherDetail Publisher { get; set; } = new();
 
 }
 
