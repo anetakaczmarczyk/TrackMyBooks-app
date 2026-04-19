@@ -12,7 +12,21 @@ builder.Services.AddHttpClient<HardcoverClient>(c =>
     c.DefaultRequestHeaders.Add("Authorization", token );
 });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigin",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:3000") // Adres Twojego frontendu
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
+});
+
 var app = builder.Build();
 app.MapControllers();
+app.UseCors("AllowLocalhost");
+app.UseCors("AllowSpecificOrigin");
+
 
 app.Run("http://localhost:5000");

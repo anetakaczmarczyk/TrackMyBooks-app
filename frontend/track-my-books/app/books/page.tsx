@@ -1,79 +1,179 @@
 "use client";
 
-import { useState } from "react";
-import {Navbar} from "@/_components/Navbar";
+import { useEffect, useState } from "react";
+import { Navbar } from "@/_components/Navbar";
+import { Book, GenreTag } from "@/_components/bookInterface";
 
-const GENRES = ["Wszystkie", "Klasyka", "Sci-Fi", "Fantasy", "Kryminał", "Romans", "Historia", "Thriller", "Biografia", "Dystopia"];
-
-const ALL_BOOKS = [
-  { id: 1,  title: "Mistrz i Małgorzata",      author: "Michaił Bułhakow",          cover: "https://covers.openlibrary.org/b/id/8231856-L.jpg",  rating: 4.9, genre: "Klasyka",   pages: 480, year: 1967 },
-  { id: 2,  title: "Sto lat samotności",        author: "Gabriel García Márquez",     cover: "https://covers.openlibrary.org/b/id/8406786-L.jpg",  rating: 4.8, genre: "Klasyka",   pages: 417, year: 1967 },
-  { id: 3,  title: "Dune",                      author: "Frank Herbert",              cover: "https://covers.openlibrary.org/b/id/8758191-L.jpg",  rating: 4.8, genre: "Sci-Fi",    pages: 688, year: 1965 },
-  { id: 4,  title: "1984",                      author: "George Orwell",              cover: "https://covers.openlibrary.org/b/id/8575708-L.jpg",  rating: 4.7, genre: "Dystopia",  pages: 328, year: 1949 },
-  { id: 5,  title: "Fundacja",                  author: "Isaac Asimov",               cover: "https://covers.openlibrary.org/b/id/8391619-L.jpg",  rating: 4.6, genre: "Sci-Fi",    pages: 244, year: 1951 },
-  { id: 6,  title: "Zbrodnia i kara",           author: "Fiodor Dostojewski",         cover: "https://covers.openlibrary.org/b/id/8091022-L.jpg",  rating: 4.8, genre: "Klasyka",   pages: 671, year: 1866 },
-  { id: 7,  title: "Mały Książę",               author: "Antoine de Saint-Exupéry",  cover: "https://covers.openlibrary.org/b/id/8406782-L.jpg",  rating: 4.9, genre: "Klasyka",   pages: 96,  year: 1943 },
-  { id: 8,  title: "Project Hail Mary",         author: "Andy Weir",                 cover: "https://covers.openlibrary.org/b/id/10509244-L.jpg", rating: 4.8, genre: "Sci-Fi",    pages: 476, year: 2021 },
-  { id: 9,  title: "The Midnight Library",      author: "Matt Haig",                 cover: "https://covers.openlibrary.org/b/id/10481085-L.jpg", rating: 4.3, genre: "Fantasy",   pages: 304, year: 2020 },
-  { id: 10, title: "Babel",                     author: "R. F. Kuang",               cover: "https://covers.openlibrary.org/b/id/13066421-L.jpg", rating: 4.6, genre: "Fantasy",   pages: 545, year: 2022 },
-  { id: 11, title: "Sea of Tranquility",        author: "Emily St. John Mandel",     cover: "https://covers.openlibrary.org/b/id/12699828-L.jpg", rating: 4.4, genre: "Sci-Fi",    pages: 272, year: 2022 },
-  { id: 12, title: "Bracia Karamazow",          author: "Fiodor Dostojewski",         cover: "https://covers.openlibrary.org/b/id/8091016-L.jpg",  rating: 4.7, genre: "Klasyka",   pages: 796, year: 1880 },
-  { id: 13, title: "Nowy wspaniały świat",      author: "Aldous Huxley",             cover: "https://covers.openlibrary.org/b/id/8406786-L.jpg",  rating: 4.5, genre: "Dystopia",  pages: 311, year: 1932 },
-  { id: 14, title: "Gra Endera",                author: "Orson Scott Card",          cover: "https://covers.openlibrary.org/b/id/8391619-L.jpg",  rating: 4.6, genre: "Sci-Fi",    pages: 226, year: 1985 },
-  { id: 15, title: "Solaris",                   author: "Stanisław Lem",             cover: "https://covers.openlibrary.org/b/id/8758191-L.jpg",  rating: 4.5, genre: "Sci-Fi",    pages: 204, year: 1961 },
-  { id: 16, title: "Tomorrow and Tomorrow",     author: "Gabrielle Zevin",           cover: "https://covers.openlibrary.org/b/id/12993076-L.jpg", rating: 4.5, genre: "Romans",    pages: 401, year: 2022 },
+const GENRES = [
+  "All", "Classics", "Fiction", "Fantasy", "Mystery",
+  "Romance", "History", "Young Adult", "Thriller",
+  "Biography", "Nonfiction", "Science Fiction", "Horror",
 ];
 
-const SORTS = ["Ocena: najwyższa", "Tytuł: A–Z", "Najnowsze", "Najstarsze"];
+const SORTS = [
+  "Rating: highest",
+  "Title: A–Z",
+  "Newest first",
+  "Oldest first",
+];
+
+const ITEMS_PER_PAGE =54;
+const INITIAL_BATCH = 104;
+
+async function fetchBooks(startNumber: number, itemsPerPage: number): Promise<Book[]> {
+  try {
+    const response = await fetch("http://localhost:5000/api/books/search", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 
+        startNumber: startNumber,
+        itemsPerPage: itemsPerPage
+       }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "An error occurred while fetching books");
+    }
+
+    const data = await response.json();
+    console.log("Fetched books:", data);
+    console.log("Release dates:", data.map((book: Book) => book.release_Date));
+    return data;
+  } catch (error) {
+    console.error("Error fetching books:", error);
+    return [];
+  }
+}
 
 export default function BooksPage() {
-  const [genre, setGenre]     = useState("Wszystkie");
-  const [sort, setSort]       = useState(SORTS[0]);
-  const [query, setQuery]     = useState("");
-  const [view, setView]       = useState<"grid" | "list">("grid");
+  const [isMounted, setIsMounted] = useState(false);
+  const [genre, setGenre]         = useState("All");
+  const [sort, setSort]           = useState(SORTS[0]);
+  const [query, setQuery]         = useState("");
+  const [view, setView]           = useState<"grid" | "list">("grid");
+  const [books, setBooks]         = useState<Book[]>([]);
+  const [loading, setLoading]     = useState(false);
+  const [page, setPage]           = useState(1);
 
-  const filtered = ALL_BOOKS
-    .filter(b => genre === "Wszystkie" || b.genre === genre)
+  // Reset to page 1 whenever filters change
+  useEffect(() => { setPage(1); }, [genre, sort, query]);
+
+  useEffect(() => {
+    setIsMounted(true);
+
+    async function loadBooks() {
+      try {
+        setLoading(true);
+        const firstBatch = await fetchBooks(0, INITIAL_BATCH);
+        setBooks(firstBatch);
+
+        let offset = INITIAL_BATCH;
+        while(offset < 10000) {
+          const batch = await fetchBooks(offset, 1000);
+          if (batch.length === 0) break;
+          batch.filter(b => b.default_cover_edition_id !== null);
+          for (let book of batch) {
+            if (book.default_cover_edition_id in books.map(b => b.default_cover_edition_id)) {
+              batch.splice(batch.indexOf(book), 1);
+            }
+          }
+          console.log(`Fetched batch of ${batch.length} books (offset: ${offset})`);
+          setBooks(prev => [...prev, ...batch]);
+          offset += 1000;
+        }
+        setLoading(false);
+        
+      } catch (error) {
+        console.error("Error loading books:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadBooks();
+  }, []);
+
+  if (!isMounted) {
+    return <div className="inner-page">Loading…</div>;
+  }
+
+  // ── Filter + sort ──
+  const filtered = books
+    .filter(b =>
+      genre === "All" ||
+      b.cached_Tags.Genre?.some((g: GenreTag) => g.tag === genre)
+    )
     .filter(b =>
       !query ||
       b.title.toLowerCase().includes(query.toLowerCase()) ||
-      b.author.toLowerCase().includes(query.toLowerCase())
+      b.contributions[0]?.author?.name.toLowerCase().includes(query.toLowerCase())
     )
     .sort((a, b) => {
-      if (sort === "Ocena: najwyższa") return b.rating - a.rating;
-      if (sort === "Tytuł: A–Z")       return a.title.localeCompare(b.title);
-      if (sort === "Najnowsze")         return b.year - a.year;
-      return a.year - b.year;
+      if (sort === "Rating: highest") return b.rating - a.rating;
+      if (sort === "Title: A–Z")      return a.title.localeCompare(b.title);
+      if (sort === "Newest first") {
+        const dA = a.release_Date || "0000-00-00";
+        const dB = b.release_Date || "0000-00-00";
+        return dB.localeCompare(dA);
+      }
+      if (sort === "Oldest first") {
+        const dA = a.release_Date || "9999-99-99";
+        const dB = b.release_Date || "9999-99-99";
+        return dA.localeCompare(dB);
+      }
+      return 0;
     });
+
+  // ── Pagination ──
+  const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
+  const paginated  = filtered.slice(
+    (page - 1) * ITEMS_PER_PAGE,
+    page * ITEMS_PER_PAGE,
+  );
+
+  const goToPage = (p: number) => {
+    setPage(p);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // Page numbers with ellipsis
+  const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1)
+    .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 2)
+    .reduce<(number | "…")[]>((acc, p, i, arr) => {
+      if (i > 0 && p - (arr[i - 1] as number) > 1) acc.push("…");
+      acc.push(p);
+      return acc;
+    }, []);
 
   return (
     <>
       <Navbar />
 
       <div className="inner-page">
-        {/* Header */}
+
+        {/* ── Header ── */}
         <div className="page-header">
           <div>
             <div className="page-eyebrow">
-              <span className="eyebrow-line" />Katalog
+              <span className="eyebrow-line" />Catalogue
               <span className="eyebrow-line" />
             </div>
-            <h1 className="page-title">Książki</h1>
+            <h1 className="page-title">Books</h1>
           </div>
 
-          {/* Search */}
           <div className="search-wrap">
             <span className="search-icon">🔍</span>
             <input
               className="search-input"
-              placeholder="Szukaj tytułu lub autora…"
+              placeholder="Search by title or author…"
               value={query}
               onChange={e => setQuery(e.target.value)}
             />
           </div>
         </div>
 
-        {/* Toolbar */}
+        {/* ── Toolbar ── */}
         <div className="books-toolbar">
           <div className="genre-chips-row">
             {GENRES.map(g => (
@@ -100,38 +200,71 @@ export default function BooksPage() {
               <button
                 className={view === "grid" ? "active" : ""}
                 onClick={() => setView("grid")}
-                title="Siatka"
+                title="Grid"
               >⊞</button>
               <button
                 className={view === "list" ? "active" : ""}
                 onClick={() => setView("list")}
-                title="Lista"
+                title="List"
               >☰</button>
             </div>
           </div>
         </div>
 
-        <p className="results-count">{filtered.length} wyników</p>
+        {/* ── Results count ── */}
+        <p className="results-count">
+          {loading
+            ? "Loading…"
+            : `${filtered.length} result${filtered.length !== 1 ? "s" : ""} · page ${page} of ${totalPages}`
+          }
+        </p>
 
-        {/* Grid view */}
-        {view === "grid" && (
+        {/* ── Loading state ── */}
+        {loading && (
+          <div className="books-loading">
+            <div className="books-loading-spinner" />
+            <p>Fetching books…</p>
+          </div>
+        )}
+
+        {/* ── Empty state ── */}
+        {!loading && filtered.length === 0 && (
+          <div className="books-empty">
+            <span className="books-empty-icon">📭</span>
+            <p>No books found matching your filters.</p>
+            <button
+              className="add-btn-sm"
+              onClick={() => { setQuery(""); setGenre("All"); }}
+            >
+              Clear filters
+            </button>
+          </div>
+        )}
+
+        {/* ── Grid view ── */}
+        {!loading && view === "grid" && paginated.length > 0 && (
           <div className="books-grid">
-            {filtered.map(book => (
-              <div className="book-grid-card" key={book.id}>
+            {paginated.map(book => (
+              <div className="book-grid-card" key={book.default_cover_edition_id}>
                 <div className="book-grid-cover-wrap">
-                  <img src={book.cover} alt={book.title} className="book-grid-cover" />
+                  <img
+                    src={book.cached_Image.url}
+                    alt={book.title}
+                    className="book-grid-cover"
+                  />
                   <div className="book-grid-overlay">
-                    <button className="add-btn">+ Dodaj do biblioteczki</button>
-                    <a href="#" className="overlay-detail">Szczegóły →</a>
+                    <button className="add-btn">+ Add to library</button>
+                    <a href="#" className="overlay-detail">Details →</a>
                   </div>
                 </div>
                 <div className="book-grid-info">
-                  <div className="book-grid-genre">{book.genre}</div>
                   <div className="book-grid-title">{book.title}</div>
-                  <div className="book-grid-author">{book.author}</div>
+                  <div className="book-grid-author">
+                    {book.contributions[0]?.author?.name}
+                  </div>
                   <div className="book-grid-meta">
-                    <span className="book-star">★ {book.rating}</span>
-                    <span>{book.pages} str.</span>
+                    <span className="book-star">★ {book.rating.toFixed(2)}</span>
+                    <span>{book.pages} pp.</span>
                   </div>
                 </div>
               </div>
@@ -139,26 +272,81 @@ export default function BooksPage() {
           </div>
         )}
 
-        {/* List view */}
-        {view === "list" && (
+        {/* ── List view ── */}
+        {!loading && view === "list" && paginated.length > 0 && (
           <div className="books-list">
-            {filtered.map(book => (
-              <div className="book-list-row" key={book.id}>
-                <img src={book.cover} alt={book.title} className="book-list-cover" />
+            {paginated.map(book => (
+              <div className="book-list-row" key={book.default_cover_edition_id}>
+                <img
+                  src={book.cached_Image.url}
+                  alt={book.title}
+                  className="book-list-cover"
+                />
                 <div className="book-list-info">
-                  <div className="book-list-genre">{book.genre}</div>
                   <div className="book-list-title">{book.title}</div>
-                  <div className="book-list-author">{book.author}</div>
+                  <div className="book-list-author">
+                    {book.contributions[0]?.author?.name}
+                  </div>
                 </div>
                 <div className="book-list-meta">
-                  <span className="book-star">★ {book.rating}</span>
-                  <span className="book-list-pages">{book.pages} str. · {book.year}</span>
+                  <span className="book-star">★ {book.rating.toFixed(2)}</span>
+                  <span className="book-list-pages">
+                    {book.pages} pp. · {book.release_Date}
+                  </span>
                 </div>
-                <button className="add-btn-sm">+ Dodaj</button>
+                <button className="add-btn-sm">+ Add</button>
               </div>
             ))}
           </div>
         )}
+
+        {/* ── Pagination ── */}
+        {!loading && totalPages > 1 && (
+          <div className="pagination">
+            <button
+              className="pagination-btn"
+              disabled={page === 1}
+              onClick={() => goToPage(1)}
+              title="First page"
+            >«</button>
+
+            <button
+              className="pagination-btn"
+              disabled={page === 1}
+              onClick={() => goToPage(page - 1)}
+              title="Previous page"
+            >‹</button>
+
+            {pageNumbers.map((p, i) =>
+              p === "…" ? (
+                <span key={`dots-${i}`} className="pagination-dots">…</span>
+              ) : (
+                <button
+                  key={p}
+                  className={`pagination-btn ${page === p ? "active" : ""}`}
+                  onClick={() => goToPage(p as number)}
+                >
+                  {p}
+                </button>
+              )
+            )}
+
+            <button
+              className="pagination-btn"
+              disabled={page === totalPages}
+              onClick={() => goToPage(page + 1)}
+              title="Next page"
+            >›</button>
+
+            <button
+              className="pagination-btn"
+              disabled={page === totalPages}
+              onClick={() => goToPage(totalPages)}
+              title="Last page"
+            >»</button>
+          </div>
+        )}
+
       </div>
     </>
   );

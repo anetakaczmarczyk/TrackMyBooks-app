@@ -7,6 +7,8 @@ const nextConfig: NextConfig = {
   compiler: {
     styledComponents: true,
   },
+  allowedDevOrigins: ['192.168.0.125'],
+  
 };
 
 export default nextConfig;

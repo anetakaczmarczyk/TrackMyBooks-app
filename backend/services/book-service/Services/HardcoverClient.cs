@@ -8,15 +8,29 @@ public class HardcoverClient
     private readonly HttpClient _http;
     public HardcoverClient(HttpClient http) => _http = http;
 
-    public async Task<List<HardcoverBook>> GetBookByTitle(string title)
+    public async Task<List<HardcoverBook>> GetBooks(int startNumber, int itemsPerPage)
     {
         var query = new { 
-            query = "query ($t: String!) { books(where: {title: {_eq: $t}}) { id title cached_contributors cached_image description ratings_count cached_tags } }",
-            variables = new { t = title }
+            query = "query GetBooks($startNumber: Int!, $itemsPerPage: Int!) { books(offset: $startNumber, limit: $itemsPerPage, order_by: { id: asc }, where: {ratings_count: {_gt: 5} } ) {default_cover_edition_id release_date cached_image title description cached_tags contributions {author {name}} rating pages ratings_count}}",
+            variables = new { startNumber, itemsPerPage }
+        };
+
+        var response = await _http.PostAsJsonAsync("", query);
+        // var rawJson = await response.Content.ReadAsStringAsync();
+        // Console.WriteLine($"DEBUG: Odpowiedź z API: {rawJson}");
+        var result = await response.Content.ReadFromJsonAsync<GraphQLRoot>();
+        return result?.Data?.Books ?? new List<HardcoverBook>();
+    }
+
+        public async Task<List<BookById>> GetBookById(int bookId)
+    {
+        var query = new { 
+            query = "query GetBookById($bookId: Int!) { editions(where: {id: {_eq: $bookId}}) { isbn_10 isbn_13 language {language} book  {default_cover_edition_id title cached_tags cached_image pages release_date rating ratings_count description book_series {series {name}}} publisher{name} contributions {author {name bio image{url}}} }}",
+            variables = new { bookId }
         };
 
         var response = await _http.PostAsJsonAsync("", query);
         var result = await response.Content.ReadFromJsonAsync<GraphQLRoot>();
-        return result?.Data?.Books ?? new List<HardcoverBook>();
+        return result?.Data?.Editions ?? new List<BookById>();
     }
 }
