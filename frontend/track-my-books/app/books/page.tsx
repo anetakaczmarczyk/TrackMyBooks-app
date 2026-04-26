@@ -45,7 +45,6 @@ async function fetchBooks(startNumber: number, itemsPerPage: number): Promise<Bo
 }
 
 export default function BooksPage() {
-  const [isMounted, setIsMounted] = useState(false);
   const [genre, setGenre]         = useState("All");
   const [sort, setSort]           = useState(SORTS[0]);
   const [query, setQuery]         = useState("");
@@ -58,29 +57,27 @@ export default function BooksPage() {
   useEffect(() => { setPage(1); }, [genre, sort, query]);
 
   useEffect(() => {
-    if (isMounted) return;
-    setIsMounted(true);
+    setBooks([])
 
     async function loadBooks() {
       try {
-        setBooks([]);
         setLoading(true);
         const firstBatch = await fetchBooks(0, INITIAL_BATCH);
         setBooks(firstBatch);
+        setLoading(false);
 
         let offset = INITIAL_BATCH;
-        while(offset < 1024) {
+        while(true) {
           const batch = await fetchBooks(offset, 1000);
           if (batch.length === 0) break;
-          const filteredBatch = batch.filter(b => b.default_cover_edition_id !== null);
+          const filteredBatch = batch.filter(b => b.default_physical_edition_id !== null);
           const uniqueBatch = filteredBatch.filter(b => 
-          !books.some(existing => existing.default_cover_edition_id === b.default_cover_edition_id)
+          !books.some(existing => existing.default_physical_edition_id === b.default_physical_edition_id)
         );
 
           setBooks(prev => [...prev, ...uniqueBatch]);
           offset += 1000;
         }
-        setLoading(false);
         
       } catch (error) {
         console.error("Error loading books:", error);
@@ -240,16 +237,16 @@ export default function BooksPage() {
         {!loading && view === "grid" && paginated.length > 0 && (
           <div className="books-grid">
             {paginated.map(book => (
-              <div className="book-grid-card" key={book.default_cover_edition_id}>
+              <div className="book-grid-card" key={book.default_physical_edition_id}>
                 <div className="book-grid-cover-wrap">
                   <img
-                    src={book.cached_Image.url}
+                    src={book.cached_Image.url || undefined}
                     alt={book.title}
                     className="book-grid-cover"
                   />
                   <div className="book-grid-overlay">
                     <button className="add-btn">+ Add to library</button>
-                    <a href={`/books/${book.default_cover_edition_id}`} className="overlay-detail">Details →</a>
+                    <a href={`/books/${book.default_physical_edition_id}`} className="overlay-detail">Details →</a>
                   </div>
                 </div>
                 <div className="book-grid-info">
@@ -271,7 +268,7 @@ export default function BooksPage() {
         {!loading && view === "list" && paginated.length > 0 && (
           <div className="books-list">
             {paginated.map(book => (
-              <div className="book-list-row" key={book.default_cover_edition_id}>
+              <div className="book-list-row" key={book.default_physical_edition_id}>
                 <img
                   src={book.cached_Image.url}
                   alt={book.title}

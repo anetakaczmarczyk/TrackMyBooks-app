@@ -1,5 +1,5 @@
 export interface Book {
-    default_cover_edition_id: number;
+    default_physical_edition_id: number;
     description: string;
     title: string;
     pages: number;

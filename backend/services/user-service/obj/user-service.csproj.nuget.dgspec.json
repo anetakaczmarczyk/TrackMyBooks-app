@@ -1,25 +1,31 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\akacz\\Documents\\Github\\TrackMyBooks-app\\backend\\services\\user-service\\user-service.csproj": {}
+    "C:\\Users\\aneta\\OneDrive\\Dokumenty\\GitHub\\TrackMyBooks-app\\backend\\services\\user-service\\user-service.csproj": {}
   },
   "projects": {
-    "C:\\Users\\akacz\\Documents\\Github\\TrackMyBooks-app\\backend\\services\\user-service\\user-service.csproj": {
+    "C:\\Users\\aneta\\OneDrive\\Dokumenty\\GitHub\\TrackMyBooks-app\\backend\\services\\user-service\\user-service.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\akacz\\Documents\\Github\\TrackMyBooks-app\\backend\\services\\user-service\\user-service.csproj",
+        "projectUniqueName": "C:\\Users\\aneta\\OneDrive\\Dokumenty\\GitHub\\TrackMyBooks-app\\backend\\services\\user-service\\user-service.csproj",
         "projectName": "user-service",
-        "projectPath": "C:\\Users\\akacz\\Documents\\Github\\TrackMyBooks-app\\backend\\services\\user-service\\user-service.csproj",
-        "packagesPath": "C:\\Users\\akacz\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\akacz\\Documents\\Github\\TrackMyBooks-app\\backend\\services\\user-service\\obj\\",
+        "projectPath": "C:\\Users\\aneta\\OneDrive\\Dokumenty\\GitHub\\TrackMyBooks-app\\backend\\services\\user-service\\user-service.csproj",
+        "packagesPath": "C:\\Users\\aneta\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\aneta\\OneDrive\\Dokumenty\\GitHub\\TrackMyBooks-app\\backend\\services\\user-service\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "C:\\Users\\akacz\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\aneta\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {

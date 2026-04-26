@@ -11,7 +11,7 @@ public class HardcoverClient
     public async Task<List<HardcoverBook>> GetBooks(int startNumber, int itemsPerPage)
     {
         var query = new { 
-            query = "query GetBooks($startNumber: Int!, $itemsPerPage: Int!) { books(offset: $startNumber, limit: $itemsPerPage, where: {ratings_count: {_gt: 5} } ) {default_cover_edition_id release_date cached_image title description cached_tags contributions {author {name}} rating pages ratings_count}}",
+            query = "query GetBooks($startNumber: Int!, $itemsPerPage: Int!) { books(offset: $startNumber, order_by: {rating: desc} limit: $itemsPerPage, where: {ratings_count: {_gt: 5} } ) {default_physical_edition_id release_date cached_image title description cached_tags contributions {author {name}} rating pages ratings_count}}",
             variables = new { startNumber, itemsPerPage }
         };
 
@@ -25,7 +25,7 @@ public class HardcoverClient
         public async Task<List<BookById>> GetBookById(int bookId)
     {
         var query = new { 
-            query = "query GetBookById($bookId: Int!) { editions(where: {id: {_eq: $bookId}}) { isbn_10 isbn_13 language {language} book  {default_cover_edition_id title cached_tags cached_image pages release_date rating ratings_count description book_series {series {name}}} publisher{name} contributions {author {name bio image{url}}} }}",
+            query = "query GetBookById($bookId: Int!) { editions(where: {id: {_eq: $bookId}}) { isbn_10 isbn_13 language {language} book  {default_physical_edition_id title cached_tags cached_image pages release_date rating ratings_count description book_series {series {name}}} publisher{name} contributions {author {name bio image{url}}} }}",
             variables = new { bookId }
         };
 

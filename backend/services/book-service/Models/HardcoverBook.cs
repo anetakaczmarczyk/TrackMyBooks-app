@@ -4,7 +4,7 @@ namespace book_service.Models;
 public class HardcoverBook
 {
 
-    [JsonPropertyName("default_cover_edition_id")]
+    [JsonPropertyName("default_physical_edition_id")]
     public int? Id { get; set; } = 0;
     public string Title { get; set; } = string.Empty;
 
