@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect, useMemo } from "react";
+import useSWR from "swr";
 import { Navbar } from "@/_components/Navbar";
 import { Book, GenreTag } from "@/_components/bookInterface";
+import Link from "next/link";
 
 const GENRES = [
   "All", "Classics", "Fiction", "Fantasy", "Mystery",
@@ -11,132 +13,126 @@ const GENRES = [
 ];
 
 const SORTS = [
-  "Rating: highest",
-  "Title: A–Z",
-  "Newest first",
-  "Oldest first",
+  "Rating: highest", "Title: A–Z", "Newest first", "Oldest first",
 ];
 
-const ITEMS_PER_PAGE =54;
-const INITIAL_BATCH = 104;
+const ITEMS_PER_PAGE = 54;
+const INITIAL_BATCH = 1000;
 
 async function fetchBooks(startNumber: number, itemsPerPage: number): Promise<Book[]> {
   try {
     const response = await fetch("http://localhost:5000/api/books/search", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ 
-        startNumber: startNumber,
-        itemsPerPage: itemsPerPage
-       }),
+      body: JSON.stringify({ startNumber, itemsPerPage }),
     });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "An error occurred while fetching books");
-    }
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error("Error fetching books:", error);
+    if (!response.ok) return [];
+    return await response.json();
+  } catch {
     return [];
   }
 }
 
-export default function BooksPage() {
-  const [genre, setGenre]         = useState("All");
-  const [sort, setSort]           = useState(SORTS[0]);
-  const [query, setQuery]         = useState("");
-  const [view, setView]           = useState<"grid" | "list">("grid");
-  const [books, setBooks]         = useState<Book[]>([]);
-  const [loading, setLoading]     = useState(false);
-  const [page, setPage]           = useState(1);
+// Funkcja fetchująca dane dla SWR
+async function fetchAllBooks(): Promise<Book[]> {
+  let allBooks: Book[] = [];
+  const firstBatch = await fetchBooks(0, INITIAL_BATCH);
+  allBooks = [...firstBatch];
 
-  // Reset to page 1 whenever filters change
-  useEffect(() => { setPage(1); }, [genre, sort, query]);
+  let offset = INITIAL_BATCH;
+  while (true) {
+    const batch = await fetchBooks(offset, 1000);
+    if (batch.length === 0) break;
+    
+    const filteredBatch = batch.filter(b => b.default_physical_edition_id !== null);
+    const uniqueBatch = filteredBatch.filter(b => 
+      !allBooks.some(existing => existing.default_physical_edition_id === b.default_physical_edition_id)
+    );
+
+    allBooks = [...allBooks, ...uniqueBatch];
+    offset += 1000;
+  }
+  return allBooks;
+}
+
+export default function BooksPage() {
+  const { data: initialBooks } = useSWR('initial-books', () => fetchBooks(0, INITIAL_BATCH), {
+    revalidateOnFocus: false,
+    revalidateOnReconnect: false,
+    revalidateOnMount: true,
+    fallbackData: [],
+  });
+
+  const [allBooks, setAllBooks] = useState<Book[]>([]);
+  const [isBackgroundLoading, setIsBackgroundLoading] = useState(false);
 
   useEffect(() => {
-    setBooks([])
+    if (!initialBooks || initialBooks.length === 0) return;
 
-    async function loadBooks() {
-      try {
-        setLoading(true);
-        const firstBatch = await fetchBooks(0, INITIAL_BATCH);
-        setBooks(firstBatch);
-        setLoading(false);
+    setAllBooks(initialBooks);
+    setIsBackgroundLoading(true);
 
-        let offset = INITIAL_BATCH;
-        while(true) {
-          const batch = await fetchBooks(offset, 1000);
-          if (batch.length === 0) break;
-          const filteredBatch = batch.filter(b => b.default_physical_edition_id !== null);
-          const uniqueBatch = filteredBatch.filter(b => 
-          !books.some(existing => existing.default_physical_edition_id === b.default_physical_edition_id)
-        );
-
-          setBooks(prev => [...prev, ...uniqueBatch]);
-          offset += 1000;
-        }
+    async function fetchRest() {
+      let offset = INITIAL_BATCH;
+      while (true) {
+        const batch = await fetchBooks(offset, 1000);
+        if (batch.length === 0) break;
         
-      } catch (error) {
-        console.error("Error loading books:", error);
-      } finally {
-        setLoading(false);
+        setAllBooks(prev => {
+          const uniqueBatch = batch.filter(b => 
+            !prev.some(existing => existing.default_physical_edition_id === b.default_physical_edition_id)
+          );
+          return [...prev, ...uniqueBatch];
+        });
+        
+        offset += 1000;
       }
+      setIsBackgroundLoading(false);
     }
-      loadBooks();
 
-  }, []);
+    fetchRest();
+  }, [initialBooks]);
 
+  const [genre, setGenre] = useState("All");
+  const [sort, setSort] = useState(SORTS[0]);
+  const [query, setQuery] = useState("");
+  const [view, setView] = useState<"grid" | "list">("grid");
+  const [page, setPage] = useState(1);
 
-  // ── Filter + sort ──
-  const filtered = books
-    .filter(b =>
-      genre === "All" ||
-      b.cached_Tags.Genre?.some((g: GenreTag) => g.tag === genre)
-    )
-    .filter(b =>
-      !query ||
-      b.title.toLowerCase().includes(query.toLowerCase()) ||
-      b.contributions[0]?.author?.name.toLowerCase().includes(query.toLowerCase())
-    )
-    .sort((a, b) => {
-      if (sort === "Rating: highest") return b.rating - a.rating;
-      if (sort === "Title: A–Z")      return a.title.localeCompare(b.title);
-      if (sort === "Newest first") {
-        const dA = a.release_Date || "0000-00-00";
-        const dB = b.release_Date || "0000-00-00";
-        return dB.localeCompare(dA);
-      }
-      if (sort === "Oldest first") {
-        const dA = a.release_Date || "9999-99-99";
-        const dB = b.release_Date || "9999-99-99";
-        return dA.localeCompare(dB);
-      }
-      return 0;
-    });
+  useEffect(() => { setPage(1); }, [genre, sort, query]);
 
-  // ── Pagination ──
+  const filtered = useMemo(() => {
+    return allBooks
+      .filter(b => genre === "All" || b.cached_Tags.Genre?.some((g: GenreTag) => g.tag === genre))
+      .filter(b => !query || b.title.toLowerCase().includes(query.toLowerCase()) || b.contributions[0]?.author?.name.toLowerCase().includes(query.toLowerCase()))
+      .sort((a, b) => {
+        if (sort === "Rating: highest") return b.rating - a.rating;
+        if (sort === "Title: A–Z") return a.title.localeCompare(b.title);
+        if (sort === "Newest first") return (b.release_Date || "0000-00-00").localeCompare(a.release_Date || "0000-00-00");
+        if (sort === "Oldest first") return (a.release_Date || "9999-99-99").localeCompare(b.release_Date || "9999-99-99");
+        return 0;
+      });
+  }, [allBooks, genre, sort, query]);
+
   const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
-  const paginated  = filtered.slice(
-    (page - 1) * ITEMS_PER_PAGE,
-    page * ITEMS_PER_PAGE,
-  );
-
-  const goToPage = (p: number) => {
-    setPage(p);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  // Page numbers with ellipsis
-  const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1)
+  const pageNumbers = useMemo(() => {
+  return Array.from({ length: totalPages }, (_, i) => i + 1)
     .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 2)
     .reduce<(number | "…")[]>((acc, p, i, arr) => {
       if (i > 0 && p - (arr[i - 1] as number) > 1) acc.push("…");
       acc.push(p);
       return acc;
     }, []);
+}, [totalPages, page]);
+
+  const paginated = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+
+  const goToPage = (p: number) => {
+    setPage(p);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const loading = allBooks.length === 0;
 
   return (
     <>
@@ -144,7 +140,6 @@ export default function BooksPage() {
 
       <div className="inner-page">
 
-        {/* ── Header ── */}
         <div className="page-header">
           <div>
             <div className="page-eyebrow">
@@ -165,7 +160,6 @@ export default function BooksPage() {
           </div>
         </div>
 
-        {/* ── Toolbar ── */}
         <div className="books-toolbar">
           <div className="genre-chips-row">
             {GENRES.map(g => (
@@ -203,7 +197,6 @@ export default function BooksPage() {
           </div>
         </div>
 
-        {/* ── Results count ── */}
         <p className="results-count">
           {loading
             ? "Loading…"
@@ -211,7 +204,6 @@ export default function BooksPage() {
           }
         </p>
 
-        {/* ── Loading state ── */}
         {loading && (
           <div className="books-loading">
             <div className="books-loading-spinner" />
@@ -219,7 +211,6 @@ export default function BooksPage() {
           </div>
         )}
 
-        {/* ── Empty state ── */}
         {!loading && filtered.length === 0 && (
           <div className="books-empty">
             <span className="books-empty-icon">📭</span>
@@ -233,7 +224,6 @@ export default function BooksPage() {
           </div>
         )}
 
-        {/* ── Grid view ── */}
         {!loading && view === "grid" && paginated.length > 0 && (
           <div className="books-grid">
             {paginated.map(book => (
@@ -246,7 +236,7 @@ export default function BooksPage() {
                   />
                   <div className="book-grid-overlay">
                     <button className="add-btn">+ Add to library</button>
-                    <a href={`/books/${book.default_physical_edition_id}`} className="overlay-detail">Details →</a>
+                    <Link href={`/books/${book.default_physical_edition_id}`} className="overlay-detail">Details →</Link>
                   </div>
                 </div>
                 <div className="book-grid-info">
@@ -264,13 +254,12 @@ export default function BooksPage() {
           </div>
         )}
 
-        {/* ── List view ── */}
         {!loading && view === "list" && paginated.length > 0 && (
           <div className="books-list">
             {paginated.map(book => (
               <div className="book-list-row" key={book.default_physical_edition_id}>
                 <img
-                  src={book.cached_Image.url}
+                  src={book.cached_Image.url || undefined}
                   alt={book.title}
                   className="book-list-cover"
                 />
@@ -292,7 +281,6 @@ export default function BooksPage() {
           </div>
         )}
 
-        {/* ── Pagination ── */}
         {!loading && totalPages > 1 && (
           <div className="pagination">
             <button
