@@ -19,7 +19,7 @@ const BG_BOOKS = [
   "https://covers.openlibrary.org/b/id/8391619-L.jpg",
 ];
 
-const GENRES = ["Klasyka", "Sci-Fi", "Fantasy", "Kryminał", "Romans", "Historia", "Thriller", "Biografia"];
+const GENRES = ["Classical", "Sci-Fi", "Fantasy", "Crime", "Romance", "History", "Thriller", "Biography", "Philosophy", "Poetry", "Horror", "Non-fiction"];
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
@@ -47,7 +47,7 @@ export default function RegisterPage() {
     return s;
   })();
 
-  const strengthLabel = ["", "Słabe", "Średnie", "Dobre", "Silne"][strength];
+  const strengthLabel = ["", "Weak", "Medium", "Strong", "Very Strong"][strength];
   const strengthColor = ["", "#e05252", "#e09452", "#c9a84c", "#52b788"][strength];
 
   const emailValid = (() => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))();
@@ -71,28 +71,28 @@ export default function RegisterPage() {
             <div className="perks">
               <div>
                 <h2 className="perks-heading">
-                  Dołącz do<br /><em>społeczności</em><br />czytelników
+                  Join the<br /><em>community</em><br />of readers
                 </h2>
               </div>
               <div className="perk-item">
                 <div className="perk-icon-wrap">📖</div>
                 <div className="perk-text">
-                  <h3>Nieograniczona biblioteka</h3>
-                  <p>Kataloguj tyle książek ile chcesz, bezpłatnie.</p>
+                  <h3>Unlimited Library</h3>
+                  <p>Organize as many books as you want, for free.</p>
                 </div>
               </div>
               <div className="perk-item">
                 <div className="perk-icon-wrap">🌟</div>
                 <div className="perk-text">
-                  <h3>Spersonalizowane rekomendacje</h3>
-                  <p>Dobieranie tytułów dopasowanych do Twojego gustu.</p>
+                  <h3>Personalized Recommendations</h3>
+                  <p>Curated titles tailored to your reading preferences.</p>
                 </div>
               </div>
               <div className="perk-item">
                 <div className="perk-icon-wrap">📊</div>
                 <div className="perk-text">
-                  <h3>Podsumowania</h3>
-                  <p>Twoje czytelnicze statystyki i osiągnięcia.</p>
+                  <h3>Summaries</h3>
+                  <p>Your reading statistics and achievements.</p>
                 </div>
               </div>
             </div>
@@ -120,22 +120,22 @@ export default function RegisterPage() {
               <div className="step-anim" key="step1">
                 <div className="form-eyebrow">
                   <span className="eyebrow-line" />
-                  Krok 1 z 2
+                  Step 1 of 2
                   <span className="eyebrow-line" />
                 </div>
                 <h1 className="form-title">
-                  Stwórz<br /><em>konto</em>
+                  Create<br /><em>Account</em>
                 </h1>
-                <p className="form-subtitle">Zarejestruj się i śledź swoją czytelniczą podróż.</p>
+                <p className="form-subtitle">Sign up and track your reading journey.</p>
 
                 <div className="divider">
                   <span className="divider-line" />
-                  <span className="divider-text">Podaj dane</span>
+                  <span className="divider-text">Provide Information</span>
                   <span className="divider-line" />
                 </div>
 
                 <div className={`field ${focused === "name" ? "active" : ""}`}>
-                  <label>Imię i nazwisko</label>
+                  <label>Full Name</label>
                   <div className="input-wrap">
                     <input
                       type="text"
@@ -150,7 +150,7 @@ export default function RegisterPage() {
                 </div>
 
                 <div className={`field ${focused === "name" ? "active" : ""}`}>
-                  <label>Nazwa użytkownika</label>
+                  <label>Username</label>
                   <div className="input-wrap">
                     <input
                       type="text"
@@ -165,11 +165,11 @@ export default function RegisterPage() {
                 </div>
 
                 <div className={`field ${focused === "email" ? "active" : ""}`}>
-                  <label>Adres e-mail</label>
+                  <label>Email Address</label>
                   <div className="input-wrap">
                     <input
                       type="email"
-                      placeholder="twoj@email.com"
+                      placeholder="your@email.com"
                       value={email}
                       onChange={e => setEmail(e.target.value)}
                       onFocus={() => setFocused("email")}
@@ -179,17 +179,17 @@ export default function RegisterPage() {
                 </div>
                   {email && (
                     <div >
-                      <span className="strength-label" style={{ color: "#e05252" }}>{emailValid ? "" : "Nieprawidłowy adres e-mail"}</span>
+                      <span className="strength-label" style={{ color: "#e05252" }}>{emailValid ? "" : "Invalid email address"}</span>
                     </div>
                   )}
                   </div>
 
                 <div className={`field ${focused === "password" ? "active" : ""}`}>
-                  <label>Hasło</label>
+                  <label>Password</label>
                   <div className="input-wrap">
                     <input
                       type={showPass ? "text" : "password"}
-                      placeholder="Minimum 8 znaków"
+                      placeholder="Minimum 8 characters"
                       value={password}
                       onChange={e => setPassword(e.target.value)}
                       onFocus={() => setFocused("password")}
@@ -225,12 +225,12 @@ export default function RegisterPage() {
                   onClick={() => setStep(2)}
                   disabled={!name || !nick || !email || !password || !emailValid || strength < 2}
                 >
-                  Dalej →
+                  Next →
                 </button>
 
                 <div className="form-footer">
-                  Masz już konto?{" "}
-                  <Link href="/login">Zaloguj się</Link>
+                  Already have an account?{" "}
+                  <Link href="/login">Log in</Link>
                 </div>
               </div>
             )}
@@ -239,17 +239,17 @@ export default function RegisterPage() {
               <div className="step-anim" key="step2">
                 <div className="form-eyebrow">
                   <span className="eyebrow-line" />
-                  Krok 2 z 2
+                  Step 2 of 2
                   <span className="eyebrow-line" />
                 </div>
                 <h1 className="form-title">
-                  Twoje<br /><em>preferencje</em>
+                  Your<br /><em>Preferences</em>
                 </h1>
                 <p className="form-subtitle">
-                  Wybierz ulubione gatunki, aby otrzymywać lepsze rekomendacje.
+                  Choose your favorite genres to receive better recommendations.
                 </p>
 
-                <span className="genres-label">Ulubione gatunki literackie</span>
+                <span className="genres-label">Favorite Literary Genres</span>
                 <div className="genres-grid">
                   {GENRES.map(g => (
                     <button
@@ -270,11 +270,11 @@ export default function RegisterPage() {
                     onChange={e => setAgree(e.target.checked)}
                   />
                   <span>
-                    Akceptuję{" "}
-                    <a href="#">regulamin serwisu</a>
-                    {" "}oraz{" "}
-                    <a href="#">politykę prywatności</a>
-                    . Wyrażam zgodę na przetwarzanie danych osobowych.
+                    I accept the{" "}
+                    <a href="#">terms of service</a>
+                    {" "}and{" "}
+                    <a href="#">privacy policy</a>
+                    . I consent to the processing of my personal data.
                   </span>
                 </div>
 
@@ -282,16 +282,16 @@ export default function RegisterPage() {
                   className="btn-submit"
                   disabled={!agree}
                 >
-                  Utwórz konto ✓
+                  Create Account ✓
                 </button>
 
                 <button className="btn-outline" onClick={() => setStep(1)}>
-                  ← Wróć
+                  ← Back
                 </button>
 
                 <div className="form-footer">
-                  Masz już konto?{" "}
-                  <a href="/logowanie">Zaloguj się</a>
+                  Already have an account?{" "}
+                  <a href="/login">Log in</a>
                 </div>
               </div>
             )}

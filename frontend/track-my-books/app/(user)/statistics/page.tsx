@@ -4,12 +4,12 @@ import { Footer } from "@/_components/Footer";
 import {Navbar} from "@/_components/Navbar";
 
 const MONTHLY = [
-  { month: "Paź", books: 1, pages: 328 },
-  { month: "Lis", books: 2, pages: 720 },
-  { month: "Gru", books: 1, pages: 244 },
-  { month: "Sty", books: 3, pages: 956 },
-  { month: "Lut", books: 2, pages: 804 },
-  { month: "Mar", books: 2, pages: 476 },
+  { month: "Feb", books: 1, pages: 328 },
+  { month: "Mar", books: 2, pages: 720 },
+  { month: "Apr", books: 1, pages: 244 },
+  { month: "May", books: 3, pages: 956 },
+  { month: "Jun", books: 2, pages: 804 },
+  { month: "Jul", books: 2, pages: 476 },
 ];
 
 const MAX_PAGES = Math.max(...MONTHLY.map(m => m.pages));
@@ -23,12 +23,12 @@ const GENRES_DIST = [
 const TOTAL_GENRE = GENRES_DIST.reduce((s, g) => s + g.count, 0);
 
 const ACHIEVEMENTS = [
-  { icon: "🔥", label: "Seria 7 dni",     desc: "Czytasz 7 dni z rzędu",      unlocked: true  },
-  { icon: "📚", label: "Pierwsza półka",  desc: "10 książek w bibliotece",    unlocked: true  },
-  { icon: "⚡", label: "Szybki czytelnik", desc: "5 książek w miesiącu",       unlocked: false },
-  { icon: "🌍", label: "Globtroter",      desc: "Autorzy z 5 krajów",         unlocked: true  },
-  { icon: "🏆", label: "Rok czytania",    desc: "52 książki w roku",          unlocked: false },
-  { icon: "💬", label: "Krytyk",          desc: "10 recenzji napisanych",     unlocked: false },
+  { icon: "🔥", label: "7-Day Streak",     desc: "Read for 7 consecutive days",      unlocked: true  },
+  { icon: "📚", label: "First Shelf",  desc: "10 books in your library",    unlocked: true  },
+  { icon: "⚡", label: "Quick Reader", desc: "5 books in a month",       unlocked: false },
+  { icon: "🌍", label: "Globetrotter",      desc: "Authors from 5 countries",         unlocked: true  },
+  { icon: "🏆", label: "Reading Year",    desc: "52 books in a year",          unlocked: false },
+  { icon: "💬", label: "Critic",          desc: "10 reviews written",     unlocked: false },
 ];
 
 const READING_LOG = [
@@ -48,11 +48,11 @@ export default function StatsPage() {
         <div className="page-header">
           <div>
             <div className="page-eyebrow">
-              <span className="eyebrow-line" />Twój postęp
+              <span className="eyebrow-line" />Your Progress
               <span className="eyebrow-line" />
             </div>
-            <h1 className="page-title">Statystyki</h1>
-            <p className="page-subtitle">Twój czytelniczy rok 2026 w liczbach.</p>
+            <h1 className="page-title">Statistics</h1>
+            <p className="page-subtitle">Your reading year 2026 in numbers.</p>
           </div>
           <div className="stats-year-badge">2026</div>
         </div>
@@ -60,10 +60,10 @@ export default function StatsPage() {
         {/* KPI row */}
         <div className="kpi-row">
           {[
-            { value: "11",    label: "Przeczytanych książek",  sub: "+3 vs zeszły rok" },
-            { value: "3 528", label: "Stron przeczytanych",    sub: "śr. 321/miesiąc"  },
-            { value: "7",     label: "Dni z rzędu",            sub: "obecna seria"      },
-            { value: "4,6",   label: "Średnia ocena",          sub: "z 9 ocenionych"    },
+            { value: "11",    label: "Books Read",  sub: "+3 vs last year" },
+            { value: "3 528", label: "Pages Read",    sub: "avg. 321/month"  },
+            { value: "7",     label: "Days in a Row",            sub: "current streak"      },
+            { value: "4,6",   label: "Average Rating",          sub: "out of 9 rated"    },
           ].map(k => (
             <div className="kpi-card" key={k.label}>
               <div className="kpi-value">{k.value}</div>
@@ -76,7 +76,7 @@ export default function StatsPage() {
         <div className="stats-grid-2">
           {/* Bar chart */}
           <div className="stats-card">
-            <h3 className="stats-card-title">Strony na miesiąc</h3>
+            <h3 className="stats-card-title">Pages per Month</h3>
             <div className="bar-chart">
               {MONTHLY.map(m => (
                 <div className="bar-col" key={m.month}>
@@ -95,7 +95,7 @@ export default function StatsPage() {
 
           {/* Genre distribution */}
           <div className="stats-card">
-            <h3 className="stats-card-title">Ulubione gatunki</h3>
+            <h3 className="stats-card-title">Favorite Genres</h3>
             <div className="genre-dist">
               {GENRES_DIST.map(g => (
                 <div className="genre-dist-row" key={g.name}>
@@ -117,13 +117,13 @@ export default function StatsPage() {
             {/* Goal */}
             <div className="reading-goal">
               <div className="goal-header">
-                <span className="goal-label">Cel roczny: 24 książki</span>
+                <span className="goal-label">Annual Goal: 24 Books</span>
                 <span className="goal-pct">46%</span>
               </div>
               <div className="goal-track">
                 <div className="goal-fill" style={{ width: "46%" }} />
               </div>
-              <span className="goal-sub">11 z 24 · zostało 13 książek</span>
+              <span className="goal-sub">11 of 24 · 13 books remaining</span>
             </div>
           </div>
         </div>
@@ -131,7 +131,7 @@ export default function StatsPage() {
         <div className="stats-grid-2">
           {/* Achievements */}
           <div className="stats-card">
-            <h3 className="stats-card-title">Osiągnięcia</h3>
+            <h3 className="stats-card-title">Achievements</h3>
             <div className="achievements-grid">
               {ACHIEVEMENTS.map(a => (
                 <div
@@ -148,14 +148,14 @@ export default function StatsPage() {
 
           {/* Reading log */}
           <div className="stats-card">
-            <h3 className="stats-card-title">Dziennik czytania</h3>
+            <h3 className="stats-card-title">Reading Log</h3>
             <div className="reading-log">
               {READING_LOG.map((entry, i) => (
                 <div className="log-row" key={i}>
                   <div className="log-dot" />
                   <div className="log-info">
                     <span className="log-title">{entry.title}</span>
-                    <span className="log-pages">{entry.pages} stron</span>
+                    <span className="log-pages">{entry.pages} pages</span>
                   </div>
                   <span className="log-date">{entry.date}</span>
                 </div>
@@ -164,7 +164,7 @@ export default function StatsPage() {
 
             {/* Heatmap mini */}
             <div className="heatmap-wrap">
-              <div className="heatmap-label">Aktywność (ostatnie 7 tygodni)</div>
+              <div className="heatmap-label">Activity (last 7 weeks)</div>
               <div className="heatmap">
                 {Array.from({ length: 49 }).map((_, i) => {
                   const intensity = [0,1,2,3,4,3,2,1,0,2,4,3,1,0,0,1,3,4,2,0,1,2,3,2,1,0,4,3,1,2,4,3,0,1,2,4,3,2,1,0,1,3,4,2,1,0,2,3,4][i] ?? 0;

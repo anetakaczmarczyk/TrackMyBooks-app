@@ -4,12 +4,12 @@ import { useState } from "react";
 import {Navbar} from "@/_components/Navbar";
 
 const MOODS = [
-  { id: "relax",     emoji: "🌿", label: "Relaks",        desc: "Lekkie, przyjemne czytanie" },
-  { id: "adventure", emoji: "⚔️",  label: "Przygoda",      desc: "Akcja i epickie światy" },
-  { id: "mind",      emoji: "🧠",  label: "Dla umysłu",   desc: "Nauka i filozofia" },
-  { id: "emotion",   emoji: "❤️",  label: "Emocje",        desc: "Poruszające historie" },
-  { id: "mystery",   emoji: "🔍",  label: "Tajemnica",     desc: "Kryminały i thrillery" },
-  { id: "wonder",    emoji: "✨",  label: "Zachwyt",       desc: "Magia i niesamowitość" },
+  { id: "relax",     emoji: "🌿", label: "Relax",        desc: "Light and pleasant reading" },
+  { id: "adventure", emoji: "⚔️",  label: "Adventure",      desc: "Action and epic worlds" },
+  { id: "mind",      emoji: "🧠",  label: "Mind",        desc: "Science and philosophy" },
+  { id: "emotion",   emoji: "❤️",  label: "Emotion",        desc: "Moving stories" },
+  { id: "mystery",   emoji: "🔍",  label: "Mystery",     desc: "Mysteries and thrillers" },
+  { id: "wonder",    emoji: "✨",  label: "Wonder",       desc: "Magic and wonder" },
 ];
 
 const RECS = [
@@ -99,17 +99,18 @@ export default function RecommendationsPage() {
         <div className="page-header">
           <div>
             <div className="page-eyebrow">
-              <span className="eyebrow-line" />Dla Ciebie
+              <span className="eyebrow-line" />For you, always
               <span className="eyebrow-line" />
             </div>
-            <h1 className="page-title">Rekomendacje</h1>
-            <p className="page-subtitle">Spersonalizowane propozycje.</p>
+            <h1 className="page-title">Recommendations</h1>
+            <p className="page-subtitle">Personalized suggestions.</p>
           </div>
         </div>
 
         {/* Mood picker */}
         <section className="rec-section">
-          <h2 className="section-heading">Jak się dziś czujesz?</h2>
+          <h2 className="section-heading">How are you feeling today?</h2>
+          <br />
           <div className="mood-grid">
             {MOODS.map(m => (
               <button
@@ -127,7 +128,7 @@ export default function RecommendationsPage() {
 
         <section className="rec-section">
           <div className="section-header-row">
-            <h2 className="section-heading">Wybrane dla Ciebie</h2>
+            <h2 className="section-heading">Selected for You</h2>
           </div>
           <div className="rec-cards">
             {RECS.map((r, i) => (
@@ -143,7 +144,7 @@ export default function RecommendationsPage() {
                     <div className="rec-author">{r.author}</div>
                     <p className="rec-reason">"{r.reason}"</p>
                     <div className="rec-actions">
-                      <button className="add-btn-sm">+ Dodaj do biblioteczki</button>
+                      <button className="add-btn-sm">+ Add to Library</button>
                       <span className="book-star">★ {r.rating}</span>
                     </div>
                   </div>
@@ -155,14 +156,15 @@ export default function RecommendationsPage() {
 
         {/* Friends activity */}
         <section className="rec-section">
-          <h2 className="section-heading">Co czytają znajomi</h2>
+          <h2 className="section-heading">Friends' Reading</h2>'
+            <br />
           <div className="friends-grid">
             {FRIENDS_READING.map(f => (
               <div className="friend-card" key={f.name}>
                 <div className="friend-avatar">{f.avatar}</div>
                 <div className="friend-info">
                   <div className="friend-name">{f.name}</div>
-                  <div className="friend-book">czyta <em>{f.book}</em></div>
+                  <div className="friend-book">is reading <em>{f.book}</em></div>
                   <div className="friend-progress-wrap">
                     <div className="friend-progress-bar">
                       <div className="friend-progress-fill" style={{ width: `${f.progress}%` }} />

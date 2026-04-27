@@ -31,7 +31,7 @@ const REVIEWS = [
   },
 ];
 
-const PROFILE_TABS = ["Przegląd", "Recenzje", "Listy", "Aktywność"];
+const PROFILE_TABS = ["Recent", "Reviews", "Lists", "Activity"];
 
 function Stars({ n }: { n: number }) {
   return (
@@ -44,7 +44,7 @@ function Stars({ n }: { n: number }) {
 }
 
 export default function ProfilePage() {
-  const [tab, setTab] = useState("Przegląd");
+  const [tab, setTab] = useState("Recent");
   const editing = false; // For demo purposes, we can toggle this to show/hide the edit button, to change if user is looking at their own profile or someone else's, etc.
   return (
     <>
@@ -52,7 +52,6 @@ export default function ProfilePage() {
 
       <div className="inner-page">
 
-        {/* Profile hero */}
         <div className="profile-hero">
           <div className="profile-cover-bg" />
           <div className="profile-hero-content">
@@ -60,7 +59,7 @@ export default function ProfilePage() {
               <div className="profile-avatar">AK</div>
               {!editing && (
                 <Link className="profile-edit-btn" href="/settings">
-                  ✏️ Edytuj
+                  ✏️ Edit
                 </Link>
               )}
             </div>
@@ -78,10 +77,10 @@ export default function ProfilePage() {
             </div>
             <div className="profile-stats-row">
               {[
-                { val: "11",  lbl: "Przeczytanych" },
-                { val: "2",   lbl: "Czyta teraz"   },
-                { val: "3",   lbl: "Na liście"      },
-                { val: "9",   lbl: "Ocenionych"     },
+                { val: "11",  lbl: "Read" },
+                { val: "2",   lbl: "Currently reading" },
+                { val: "3",   lbl: "On the list" },
+                { val: "9",   lbl: "Reviewed" },
               ].map(s => (
                 <div className="profile-stat" key={s.lbl}>
                   <span className="profile-stat-val">{s.val}</span>
@@ -92,7 +91,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Tabs */}
+
         <div className="profile-tabs">
           {PROFILE_TABS.map(t => (
             <button
@@ -105,13 +104,12 @@ export default function ProfilePage() {
           ))}
         </div>
 
-        {/* TAB: Przegląd */}
-        {tab === "Przegląd" && (
+        {tab === "Recent" && (
           <div className="profile-content">
             <div className="stats-grid-2">
               {/* Recently read */}
               <div className="stats-card">
-                <h3 className="stats-card-title">Ostatnio przeczytane</h3>
+                <h3 className="stats-card-title">Recently read</h3>
                 <div className="profile-books-row">
                   {RECENT_BOOKS.map(b => (
                     <div className="profile-book-thumb" key={b.id}>
@@ -122,24 +120,24 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              {/* Reading goal */}
+
               <div className="stats-card">
-                <h3 className="stats-card-title">Cel na 2026</h3>
+                <h3 className="stats-card-title">Reading Goal for 2026</h3>
                 <div className="goal-big">
                   <div className="goal-big-number">11 <span>/ 24</span></div>
                   <div className="goal-track" style={{ marginTop: 12 }}>
                     <div className="goal-fill" style={{ width: "46%" }} />
                   </div>
-                  <p className="goal-sub" style={{ marginTop: 8 }}>46% celu rocznego · pozostało 13 książek</p>
-                  <Link href="/statistics" className="goal-link">Zobacz pełne statystyki →</Link>
+                  <p className="goal-sub" style={{ marginTop: 8 }}>46% annual goal · 13 books remaining</p>
+                  <Link href="/statistics" className="goal-link">View full statistics →</Link>
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* TAB: Recenzje */}
-        {tab === "Recenzje" && (
+
+        {tab === "Reviews" && (
           <div className="profile-content">
             <div className="reviews-list">
               {REVIEWS.map(r => (
@@ -159,8 +157,8 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {/* TAB: Listy */}
-        {tab === "Listy" && (
+
+        {tab === "Lists" && (
           <div className="profile-content">
             <div className="lists-grid">
               {[
@@ -171,19 +169,19 @@ export default function ProfilePage() {
                 <div className="list-card" key={l.name}>
                   <span className="list-emoji">{l.emoji}</span>
                   <span className="list-name">{l.name}</span>
-                  <span className="list-count">{l.count} książek</span>
+                  <span className="list-count">{l.count} books</span>
                 </div>
               ))}
               <div className="list-card list-add">
                 <span className="list-emoji">+</span>
-                <span className="list-name">Nowa lista</span>
+                <span className="list-name">New list</span>
               </div>
             </div>
           </div>
         )}
 
-        {/* TAB: Aktywność */}
-        {tab === "Aktywność" && (
+
+        {tab === "Activity" && (
           <div className="profile-content">
             <div className="activity-feed">
               {[

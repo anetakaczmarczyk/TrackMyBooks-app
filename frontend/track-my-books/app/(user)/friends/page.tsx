@@ -24,17 +24,17 @@ const REQUESTS = [
 ];
 
 const ACTIVITY = [
-  { avatar: "MK", name: "Marta K.",  action: 'skończyła czytać', title: "Babel",             time: "2 godz. temu" },
-  { avatar: "AS", name: "Anna S.",   action: 'oceniła',          title: "1984",               time: "wczoraj"      },
-  { avatar: "PW", name: "Piotr W.",  action: 'dodał do listy',   title: "Dune Messiah",       time: "2 dni temu"   },
-  { avatar: "TN", name: "Tomasz N.", action: 'napisał recenzję', title: "Foundation",         time: "3 dni temu"   },
-  { avatar: "AS", name: "Anna S.",   action: 'zaczęła czytać',   title: "Sea of Tranquility", time: "4 dni temu"   },
+  { avatar: "MK", name: "Marta K.",  action: 'finished reading', title: "Babel",             time: "2 hours ago" },
+  { avatar: "AS", name: "Anna S.",   action: 'rated',          title: "1984",               time: "yesterday"      },
+  { avatar: "PW", name: "Piotr W.",  action: 'added to list',   title: "Dune Messiah",       time: "2 days ago"   },
+  { avatar: "TN", name: "Tomasz N.", action: 'wrote review', title: "Foundation",         time: "3 days ago"   },
+  { avatar: "AS", name: "Anna S.",   action: 'started reading',   title: "Sea of Tranquility", time: "4 days ago"   },
 ];
 
-const TABS = ["Moi znajomi", "Zaproszenia", "Propozycje", "Aktywność znajomych"];
+const TABS = ["My friends", "Invitations", "Suggestions", "Friends' Activity"];
 
 export default function FriendsPage() {
-  const [tab, setTab]         = useState("Moi znajomi");
+  const [tab, setTab]         = useState("My friends");
   const [query, setQuery]     = useState("");
   const [sent, setSent]       = useState<number[]>([]);
   const [accepted, setAccepted] = useState<number[]>([]);
@@ -47,22 +47,21 @@ export default function FriendsPage() {
 
         <div className="page-header">
           <div>
-            <div className="page-eyebrow"><span className="eyebrow-line" />Społeczność<span className="eyebrow-line" /></div>
-            <h1 className="page-title">Znajomi</h1>
-            <p className="page-subtitle">{MY_FRIENDS.length} znajomych · {REQUESTS.length} zaproszeń</p>
+            <div className="page-eyebrow"><span className="eyebrow-line" />Community<span className="eyebrow-line" /></div>
+            <h1 className="page-title">Friends</h1>
+            <p className="page-subtitle">{MY_FRIENDS.length} friends · {REQUESTS.length} invitations</p>
           </div>
           <div className="search-wrap">
             <span className="search-icon">🔍</span>
             <input
               className="search-input"
-              placeholder="Szukaj użytkownika…"
+              placeholder="Search user…"
               value={query}
               onChange={e => setQuery(e.target.value)}
             />
           </div>
         </div>
 
-        {/* Tabs */}
         <div className="profile-tabs" style={{ marginBottom: 32 }}>
           {TABS.map(t => (
             <button
@@ -71,15 +70,14 @@ export default function FriendsPage() {
               onClick={() => setTab(t)}
             >
               {t}
-              {t === "Zaproszenia" && REQUESTS.length > 0 && (
+              {t === "Invitations" && REQUESTS.length > 0 && (
                 <span className="friends-notif-badge">{REQUESTS.length}</span>
               )}
             </button>
           ))}
         </div>
 
-        {/* MY FRIENDS */}
-        {tab === "Moi znajomi" && (
+        {tab === "My friends" && (
           <div className="friends-big-grid">
             {MY_FRIENDS
               .filter(f => !query || f.name.toLowerCase().includes(query.toLowerCase()))
@@ -98,29 +96,28 @@ export default function FriendsPage() {
                 <div className="fbc-stats">
                   <div className="fbc-stat">
                     <span className="fbc-stat-val">{f.books}</span>
-                    <span className="fbc-stat-lbl">książek</span>
+                    <span className="fbc-stat-lbl">books</span>
                   </div>
                   <div className="fbc-stat">
                     <span className="fbc-stat-val">{f.mutual}</span>
-                    <span className="fbc-stat-lbl">wspólnych</span>
+                    <span className="fbc-stat-lbl">mutual</span>
                   </div>
                 </div>
                 <div className="fbc-actions">
-                  <a href="#" className="fbc-btn-ghost">Zobacz profil</a>
-                  <button className="fbc-btn-remove">Usuń</button>
+                  <a href="#" className="fbc-btn-ghost">View Profile</a>
+                  <button className="fbc-btn-remove">Remove</button>
                 </div>
               </div>
             ))}
           </div>
         )}
 
-        {/* REQUESTS */}
-        {tab === "Zaproszenia" && (
+        {tab === "Invitations" && (
           <div style={{ maxWidth: 560 }}>
             {REQUESTS.filter(r => !accepted.includes(r.id) && !declined.includes(r.id)).length === 0 ? (
               <div className="friends-empty">
                 <span className="friends-empty-icon">📬</span>
-                <p>Brak nowych zaproszeń</p>
+                <p>No new invitations</p>
               </div>
             ) : (
               REQUESTS.filter(r => !accepted.includes(r.id) && !declined.includes(r.id)).map(r => (
@@ -128,11 +125,11 @@ export default function FriendsPage() {
                   <div className="fbc-avatar" style={{ width: 48, height: 48, fontSize: 15 }}>{r.avatar}</div>
                   <div style={{ flex: 1 }}>
                     <div className="fbc-name">{r.name}</div>
-                    <div className="fbc-handle">{r.handle} · {r.mutual} wspólnych znajomych</div>
+                    <div className="fbc-handle">{r.handle} · {r.mutual} mutual friends</div>
                   </div>
                   <div style={{ display: "flex", gap: 8 }}>
-                    <button className="btn-gold" style={{ padding: "7px 18px", fontSize: 13 }} onClick={() => setAccepted(p => [...p, r.id])}>Akceptuj</button>
-                    <button className="fbc-btn-remove" onClick={() => setDeclined(p => [...p, r.id])}>Odrzuć</button>
+                    <button className="btn-gold" style={{ padding: "7px 18px", fontSize: 13 }} onClick={() => setAccepted(p => [...p, r.id])}>Accept</button>
+                    <button className="fbc-btn-remove" onClick={() => setDeclined(p => [...p, r.id])}>Decline</button>
                   </div>
                 </div>
               ))
@@ -140,8 +137,7 @@ export default function FriendsPage() {
           </div>
         )}
 
-        {/* SUGGESTIONS */}
-        {tab === "Propozycje" && (
+        {tab === "Suggestions" && (
           <div className="friends-big-grid">
             {SUGGESTIONS.map(s => (
               <div className="friend-big-card" key={s.id}>
@@ -158,17 +154,17 @@ export default function FriendsPage() {
                 <div className="fbc-stats">
                   <div className="fbc-stat">
                     <span className="fbc-stat-val">{s.books}</span>
-                    <span className="fbc-stat-lbl">książek</span>
+                    <span className="fbc-stat-lbl">books</span>
                   </div>
                   <div className="fbc-stat">
                     <span className="fbc-stat-val">{s.mutual}</span>
-                    <span className="fbc-stat-lbl">wspólnych</span>
+                    <span className="fbc-stat-lbl">mutual</span>
                   </div>
                 </div>
                 <div className="fbc-actions">
                   {sent.includes(s.id)
-                    ? <span className="fbc-sent-label">✓ Wysłano zaproszenie</span>
-                    : <button className="btn-gold" style={{ padding: "8px 0", fontSize: 13, width: "100%" }} onClick={() => setSent(p => [...p, s.id])}>+ Zaproś</button>
+                    ? <span className="fbc-sent-label">✓ Invitation sent</span>
+                    : <button className="btn-gold" style={{ padding: "8px 0", fontSize: 13, width: "100%" }} onClick={() => setSent(p => [...p, s.id])}>+ Invite</button>
                   }
                 </div>
               </div>
@@ -176,8 +172,7 @@ export default function FriendsPage() {
           </div>
         )}
 
-        {/* ACTIVITY */}
-        {tab === "Aktywność znajomych" && (
+        {tab === "Friends' Activity" && (
           <div className="friends-activity">
             {ACTIVITY.map((a, i) => (
               <div className="fbc-activity-row" key={i}>

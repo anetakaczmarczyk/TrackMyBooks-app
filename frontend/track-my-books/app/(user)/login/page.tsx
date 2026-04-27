@@ -27,7 +27,6 @@ export default function LoginPage() {
   return (
 
 <div className="page">
-        {/* LEFT */}
         <div className="left-panel">
           <div className="book-wall">
             {BG_BOOKS.map((src, i) => (
@@ -43,45 +42,43 @@ export default function LoginPage() {
             <div className="left-quote">
               <span className="quote-mark">"</span>
               <blockquote>
-                Czytelnik żyje tysiącem żywotów nim umrze. Ten, który nigdy nie czyta — tylko jednym.
+                A reader lives a thousand lives before he dies. The man who never reads lives only one.
               </blockquote>
               <span className="quote-author">— George R.R. Martin</span>
             </div>
           </div>
         </div>
 
-        {/* RIGHT */}
         <div className="right-panel">
           <div className="form-container">
             <div className="form-eyebrow">
               <span className="eyebrow-line" />
-              Witaj z powrotem
+              Welcome back
               <span className="eyebrow-line" />
             </div>
             <h1 className="form-title">
-              Zaloguj się<br />do <em>Track My Books</em>
+              Sign in<br />to <em>Track My Books</em>
             </h1>
             <p className="form-subtitle">
-              Kontynuuj swoją czytelniczą podróż.
+              Continue your reading journey.
             </p>
 
 
 
             <div className="divider">
               <span className="divider-line" />
-              <span className="divider-text">Zaloguj się</span>
+              <span className="divider-text">Sign in</span>
               <span className="divider-line" />
             </div>
 
-            {/* Form */}
             <div
               className={`field ${focused === "email" ? "active" : ""}`}
             >
-              <label>Adres e-mail</label>
+              <label>Email address</label>
               <div className="input-wrap">
                 <input
                   type="email"
-                  placeholder="twoj@email.com"
+                  placeholder="you@email.com"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   onFocus={() => setFocused("email")}
@@ -94,7 +91,7 @@ export default function LoginPage() {
             <div
               className={`field ${focused === "password" ? "active" : ""}`}
             >
-              <label>Hasło</label>
+              <label>Password</label>
               <div className="input-wrap">
                 <input
                   type={showPass ? "text" : "password"}
@@ -116,16 +113,16 @@ export default function LoginPage() {
             <div className="field-row">
               <label className="remember">
                 <input type="checkbox" />
-                <span>Zapamiętaj mnie</span>
+                <span>Remember me</span>
               </label>
-              <a href="#" className="forgot-link">Zapomniałem hasła</a>
+              <a href="#" className="forgot-link">Forgot your password?</a>
             </div>
 
-            <button className="btn-submit">Zaloguj się</button>
+            <button className="btn-submit">Sign in</button>
 
             <div className="form-footer">
-              Nie masz konta?{" "}
-              <Link href="/signup">Zarejestruj się za darmo →</Link>
+              Don't have an account?{" "}
+              <Link href="/signup">Sign up for free →</Link>
             </div>
           </div>
         </div>

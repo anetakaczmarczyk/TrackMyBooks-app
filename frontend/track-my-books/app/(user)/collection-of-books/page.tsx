@@ -4,7 +4,7 @@ import { useState } from "react";
 import {Navbar} from "@/_components/Navbar";
 import { Footer } from "@/_components/Footer";
 
-const STATUSES = ["Czytam teraz", "Przeczytane", "Chcę przeczytać", "Porzucone", "Listy książek"];
+const STATUSES = ["Reading", "Read", "Want to Read", "Abandoned", "Book Lists"];
 
 
 // To change later to fetching from API
@@ -12,25 +12,25 @@ const LIBRARY: Record<string, {
   id: number; title: string; author: string; cover: string;
   rating?: number; progress?: number; pages: number; addedDate: string;
 }[]> = {
-  "Czytam teraz": [
+  "Reading": [
     { id: 1, title: "Dune", author: "Frank Herbert", cover: "https://covers.openlibrary.org/b/id/8758191-L.jpg", progress: 62, pages: 688, addedDate: "12 mar 2026" },
     { id: 2, title: "Babel", author: "R. F. Kuang", cover: "https://covers.openlibrary.org/b/id/13066421-L.jpg", progress: 31, pages: 545, addedDate: "20 mar 2026" },
   ],
-  "Przeczytane": [
+  "Read": [
     { id: 3, title: "Mistrz i Małgorzata", author: "Michaił Bułhakow", cover: "https://covers.openlibrary.org/b/id/8231856-L.jpg", rating: 5, pages: 480, addedDate: "1 sty 2026" },
     { id: 4, title: "1984", author: "George Orwell", cover: "https://covers.openlibrary.org/b/id/8575708-L.jpg", rating: 5, pages: 328, addedDate: "15 lut 2026" },
     { id: 5, title: "Fundacja", author: "Isaac Asimov", cover: "https://covers.openlibrary.org/b/id/8391619-L.jpg", rating: 4, pages: 244, addedDate: "28 lut 2026" },
     { id: 6, title: "Project Hail Mary", author: "Andy Weir", cover: "https://covers.openlibrary.org/b/id/10509244-L.jpg", rating: 5, pages: 476, addedDate: "5 mar 2026" },
   ],
-  "Chcę przeczytać": [
+  "Want to Read": [
     { id: 7, title: "Zbrodnia i kara", author: "Fiodor Dostojewski", cover: "https://covers.openlibrary.org/b/id/8091022-L.jpg", pages: 671, addedDate: "8 mar 2026" },
     { id: 8, title: "Sto lat samotności", author: "Gabriel García Márquez", cover: "https://covers.openlibrary.org/b/id/8406786-L.jpg", pages: 417, addedDate: "10 mar 2026" },
     { id: 9, title: "Sea of Tranquility", author: "Emily St. John Mandel", cover: "https://covers.openlibrary.org/b/id/12699828-L.jpg", pages: 272, addedDate: "18 mar 2026" },
   ],
-  "Porzucone": [
+  "Abandoned": [
     { id: 10, title: "Bracia Karamazow", author: "Fiodor Dostojewski", cover: "https://covers.openlibrary.org/b/id/8091016-L.jpg", pages: 796, addedDate: "3 lut 2026" },
   ],
-  "Listy książek": [
+  "Book Lists": [
     { id: 11, title: "Ulubione książki 2025", author: "Mój wybór", cover: "https://covers.openlibrary.org/b/id/11111111-L.jpg", pages: 0, addedDate: "30 gru 2025" },
   ],
 };
@@ -60,7 +60,7 @@ export default function LibraryPage() {
   const [status, setStatus] = useState(STATUSES[0]);
   const books = LIBRARY[status];
   const totalBooks = Object.values(LIBRARY).flat().length;
-  const readBooks  = LIBRARY["Przeczytane"].length;
+  const readBooks  = LIBRARY["Read"].length;
 
   return (
     <>

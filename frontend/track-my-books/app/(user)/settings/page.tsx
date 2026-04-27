@@ -5,9 +5,9 @@ import Link from "next/link";
 import {Navbar} from "@/_components/Navbar";
 
 const SETTING_TABS = [
-  { id: "konto",         icon: "👤", label: "Konto"              },
-  { id: "haslo",         icon: "🔒", label: "Hasło i bezpieczeństwo" },
-  { id: "usuniecie",     icon: "⚠️", label: "Usuń konto"         },
+  { id: "konto",         icon: "👤", label: "Account"              },
+  { id: "haslo",         icon: "🔒", label: "Password & Security" },
+  { id: "usuniecie",     icon: "⚠️", label: "Delete Account"         },
 ];
 
 function Toggle({ on, onChange }: { on: boolean; onChange: () => void }) {
@@ -60,7 +60,7 @@ export default function SettingsPage() {
     return s;
   })();
   const strengthColor = ["", "#e05252", "#e09452", "#c9a84c", "#52b788"][strength];
-  const strengthLabel = ["", "Słabe", "Średnie", "Dobre", "Silne"][strength];
+  const strengthLabel = ["", "Weak", "Average", "Strong", "Very Strong"][strength];
 
   return (
     <>
@@ -69,8 +69,8 @@ export default function SettingsPage() {
 
         <div className="page-header" style={{ marginBottom: 36 }}>
           <div>
-            <div className="page-eyebrow"><span className="eyebrow-line" />Zarządzaj kontem<span className="eyebrow-line" /></div>
-            <h1 className="page-title">Ustawienia</h1>
+            <div className="page-eyebrow"><span className="eyebrow-line" />Manage Account<span className="eyebrow-line" /></div>
+            <h1 className="page-title">Settings</h1>
           </div>
         </div>
 
@@ -96,32 +96,32 @@ export default function SettingsPage() {
             {/* ── KONTO ── */}
             {tab === "konto" && (
               <div className="settings-panel">
-                <h2 className="settings-panel-title">Informacje o koncie</h2>
+                <h2 className="settings-panel-title">Account Information</h2>
 
                 <div className="settings-avatar-row">
                   <div className="settings-avatar">AK</div>
                   <div>
-                    <button className="add-btn-sm">Zmień avatar</button>
+                    <button className="add-btn-sm">Change Avatar</button>
                     <p className="settings-hint">JPG, PNG, max. 2 MB</p>
                   </div>
                 </div>
 
                 <div className="settings-fields-grid">
                   <div className="field active">
-                    <label>Imię i nazwisko</label>
+                    <label>Full Name</label>
                     <div className="input-wrap">
                       <input value={displayName} onChange={e => setDisplayName(e.target.value)} type="text" />
                     </div>
                   </div>
                   <div className="field">
-                    <label>Nazwa użytkownika</label>
+                    <label>Username</label>
                     <div className="input-wrap">
                       <input value={handle} disabled type="text" placeholder="@handle" />
                       <span className="input-icon" style={{ right: 14, fontSize: 12 }}>@</span>
                     </div>
                   </div>
                   <div className="field" style={{ gridColumn: "1 / -1" }}>
-                    <label>Adres e-mail</label>
+                    <label>Email Address</label>
                     <div className="input-wrap">
                       <input value={email} onChange={e => setEmail(e.target.value)} type="email" />
                       <span className="input-icon">✉</span>
@@ -141,37 +141,37 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="settings-field-group">
-                  <div className="settings-group-title">Cel czytelniczy 2026</div>
-                  <SettingsRow label="Liczba książek w roku" sub="Używane w statystykach i na profilu">
+                  <div className="settings-group-title">Reading Goal 2026</div>
+                  <SettingsRow label="Number of books per year" sub="Used in statistics and on your profile">
                     <input type="number" className="settings-number-input" defaultValue={24} min={1} max={365} />
                   </SettingsRow>
                 </div>
 
-                {savedKonto && <div className="settings-saved-toast">✓ Zmiany zapisane</div>}
                 <button className="btn-submit" style={{ marginTop: 24, maxWidth: 200 }} onClick={() => { setSavedKonto(true); setTimeout(() => setSavedKonto(false), 2500); }}>
-                  Zapisz zmiany
+                  Save Changes
                 </button>
+                {savedKonto && <div className="settings-saved-toast">✓ Changes saved</div>}
               </div>
             )}
 
             {/* ── HASŁO ── */}
             {tab === "haslo" && (
               <div className="settings-panel">
-                <h2 className="settings-panel-title">Hasło i bezpieczeństwo</h2>
+                <h2 className="settings-panel-title">Password & Security</h2>
 
                 <div className="settings-field-group">
-                  <div className="settings-group-title">Zmień hasło</div>
+                  <div className="settings-group-title">Change Password</div>
                   <div className="field">
-                    <label>Obecne hasło</label>
+                    <label>Current Password</label>
                     <div className="input-wrap">
                       <input type={showP ? "text" : "password"} value={currPass} onChange={e => setCurrPass(e.target.value)} placeholder="••••••••" />
                       <span className="input-icon clickable" onClick={() => setShowP(v => !v)}>{showP ? "🙈" : "👁"}</span>
                     </div>
                   </div>
                   <div className="field">
-                    <label>Nowe hasło</label>
+                    <label>New Password</label>
                     <div className="input-wrap">
-                      <input type={showP ? "text" : "password"} value={newPass} onChange={e => setNewPass(e.target.value)} placeholder="Minimum 8 znaków" />
+                      <input type={showP ? "text" : "password"} value={newPass} onChange={e => setNewPass(e.target.value)} placeholder="Minimum 8 characters" />
                     </div>
                     {newPass && (
                       <div className="strength-bar" style={{ marginTop: 8 }}>
@@ -183,7 +183,7 @@ export default function SettingsPage() {
                     )}
                   </div>
                   <div className="field">
-                    <label>Powtórz nowe hasło</label>
+                    <label>Confirm New Password</label>
                     <div className="input-wrap">
                       <input type={showP ? "text" : "password"} value={confPass} onChange={e => setConfPass(e.target.value)} placeholder="••••••••" />
                       {confPass && newPass && (
@@ -194,7 +194,7 @@ export default function SettingsPage() {
                     </div>
                   </div>
                   <button className="btn-submit" style={{ maxWidth: 220 }} disabled={!currPass || !newPass || newPass !== confPass || strength < 2}>
-                    Zmień hasło
+                    Change Password
                   </button>
                 </div>
               </div>
@@ -205,30 +205,30 @@ export default function SettingsPage() {
             {/* ── USUŃ KONTO ── */}
             {tab === "usuniecie" && (
               <div className="settings-panel">
-                <h2 className="settings-panel-title" style={{ color: "#e05252" }}>Usuń konto</h2>
+                <h2 className="settings-panel-title" style={{ color: "#e05252" }}>Delete Account</h2>
                 <div className="danger-zone">
                   <div className="danger-warning">
                     <span className="danger-icon">⚠️</span>
                     <div>
-                      <strong>Ta operacja jest nieodwracalna.</strong>
-                      <p>Usunięcie konta spowoduje trwałe usunięcie wszystkich Twoich danych — biblioteczki, recenzji, statystyk i historii czytania. Nie można tego cofnąć.</p>
+                      <strong>This action is irreversible.</strong>
+                      <p>Deleting your account will permanently remove all your data — your bookshelf, reviews, statistics, and reading history. This cannot be undone.</p>
                     </div>
                   </div>
                   <div className="settings-field-group" style={{ marginTop: 24 }}>
                     <div className="field">
-                      <label>Wpisz swoje hasło, aby potwierdzić</label>
+                      <label>Enter your password to confirm</label>
                       <div className="input-wrap">
                         <input type="password" placeholder="••••••••" style={{ maxWidth: 320 }} />
                       </div>
                     </div>
                     <div className="field">
-                      <label>Wpisz „USUŃ KONTO" aby potwierdzić</label>
+                      <label>Enter "DELETE ACCOUNT" to confirm</label>
                       <div className="input-wrap">
-                        <input type="text" placeholder="USUŃ KONTO" style={{ maxWidth: 320 }} />
+                        <input type="text" placeholder="DELETE ACCOUNT" style={{ maxWidth: 320 }} />
                       </div>
                     </div>
                     <button className="btn-danger" style={{ marginTop: 8 }}>
-                      Trwale usuń konto
+                      Permanently delete account
                     </button>
                   </div>
                 </div>
