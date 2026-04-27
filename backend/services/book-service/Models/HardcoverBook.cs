@@ -58,7 +58,16 @@ public class BookSeriesContainer
 public class SeriesDetail
 {
     public string Name { get; set; } = string.Empty;
+    public int Books_Count { get; set; } = 0;
+    public List<BookInSeriesContainer> Book_Series { get; set; } = new();
 }
+
+public class BookInSeriesContainer
+{
+    public int Position { get; set; } = 0;
+    public BookDetail Book { get; set; } = new();
+}
+
 public class LanguageDetail
 {
     public string Language { get; set; } = string.Empty;

@@ -25,11 +25,13 @@ public class HardcoverClient
         public async Task<List<BookById>> GetBookById(int bookId)
     {
         var query = new { 
-            query = "query GetBookById($bookId: Int!) { editions(where: {id: {_eq: $bookId}}) { isbn_10 isbn_13 language {language} book  {default_physical_edition_id title cached_tags cached_image pages release_date rating ratings_count description book_series {series {name}}} publisher{name} contributions {author {name bio image{url}}} }}",
+            query = "query GetBookById($bookId: Int!) { editions(where: {id: {_eq: $bookId}}) { isbn_10 isbn_13 language {language} book  {default_physical_edition_id title cached_tags cached_image pages release_date rating ratings_count description book_series { series { name books_count book_series(distinct_on: position, order_by: [{position: asc}, {book: {users_count: desc}}], where: {book: {canonical_id: {_is_null: true}, is_partial_book: {_eq: false}}, compilation: {_eq: false}}) { position book { default_physical_edition_id title } } } } } publisher{name} contributions {author {name bio image{url}}} }}",
             variables = new { bookId }
         };
 
         var response = await _http.PostAsJsonAsync("", query);
+                // var rawJson = await response.Content.ReadAsStringAsync();
+        // Console.WriteLine($"DEBUG: Odpowiedź z API: {rawJson}");
         var result = await response.Content.ReadFromJsonAsync<GraphQLRoot>();
         return result?.Data?.Editions ?? new List<BookById>();
     }

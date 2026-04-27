@@ -18,11 +18,20 @@ export interface Book {
     book_Series: {
         series: {
             name: string;
-            position: number;
+            books_Count: number;
+            book_Series: BookInSeries[];
         }
     }[];
     publisher: {
         name: string;
+    }
+}
+
+export interface BookInSeries {
+    position: number;
+    book: {
+        default_physical_edition_id: number;
+        title: string;
     }
 }
 

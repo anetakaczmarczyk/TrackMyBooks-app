@@ -39,7 +39,6 @@ function RatingBar({ label, pct }: { label: string; pct: number }) {
 }
 
 export default function BookDetail({bookbyId}: { bookbyId: BookByIdResponse }) {
-  console.log("BookDetail render, book:", bookbyId);
   const [status, setStatus]         = useState<string | null>("reading");
   const [progress, setProgress]     = useState(0);
   const [userRating, setUserRating] = useState(0);
@@ -57,23 +56,22 @@ export default function BookDetail({bookbyId}: { bookbyId: BookByIdResponse }) {
     setStatus(id);
     if (id === "read") setProgress(bookbyId.book.pages);
   };
+  let tabs = ["opis", "recenzje", "szczegóły"];
+  if (bookbyId.book.book_Series.length > 0) tabs.push("seria");
 
   return (
     <>
       <Navbar />
       <div className="inner-page">
 
-        {/* ── HERO ── */}
         <div className="book-detail-hero">
           <div className="bdh-bg" />
 
-          {/* Cover */}
           <div className="bdh-cover-wrap">
             <img src={bookbyId.book.cached_Image.url} alt={bookbyId.book.title} className="bdh-cover" />
             <div className="bdh-cover-shadow" />
           </div>
 
-          {/* Meta */}
           <div className="bdh-meta">
             <div className="bdh-series">
               {bookbyId.book.book_Series[0]?.series.name}
@@ -102,7 +100,6 @@ export default function BookDetail({bookbyId}: { bookbyId: BookByIdResponse }) {
             
 
 
-            {/* ── STATUS BUTTONS ── */}
             <div className="bdh-status-group">
               {STATUSES.map(s => (
                 <button
@@ -118,7 +115,6 @@ export default function BookDetail({bookbyId}: { bookbyId: BookByIdResponse }) {
               ))}
             </div>
 
-            {/* ── PROGRESS (only when reading) ── */}
             {status === "reading" && (
               <div className="bdh-progress-box">
                 <div className="bdh-progress-header">
@@ -149,30 +145,27 @@ export default function BookDetail({bookbyId}: { bookbyId: BookByIdResponse }) {
           </div>
         </div>
 
-        {/* ── TABS ── */}
         <div className="profile-tabs" style={{ marginBottom: 32, marginTop: 8 }}>
-          {["opis", "recenzje", "szczegóły", "seria"].map(t => (
+          {tabs.map(t => (
             <button
               key={t}
               className={`profile-tab ${activeTab === t ? "active" : ""}`}
               onClick={() => setActiveTab(t)}
               style={{ textTransform: "capitalize" }}
             >
-              {t === "opis" ? "Description" : t === "recenzje" ? `Reviews (${REVIEWS.length})` : t === "szczegóły" ? "Details" : "Series"}
+              {t === "opis" ? "Description" : t === "recenzje" ? `Reviews (${REVIEWS.length})` : t === "szczegóły" ? "Details" :  "Series"}
             </button>
           ))}
         </div>
 
         <div className="book-detail-body">
 
-          {/* ── OPIS ── */}
           {activeTab === "opis" && (
             <div className="book-detail-main">
               <div className="bd-description">
                 {bookbyId.book.description?.split("\n\n").map((p, i) => <p key={i}>{p}</p>)}
               </div>
 
-              {/* Author box */}
               <div className="bd-author-box">
                 <div className="bd-author-avatar"></div>
                 <div>
@@ -284,7 +277,6 @@ export default function BookDetail({bookbyId}: { bookbyId: BookByIdResponse }) {
             </div>
           )}
 
-          {/* ── SZCZEGÓŁY ── */}
           {activeTab === "szczegóły" && (
             <div className="book-detail-main">
               <div className="bd-details-table">
@@ -307,27 +299,26 @@ export default function BookDetail({bookbyId}: { bookbyId: BookByIdResponse }) {
             </div>
           )}
 
-          {/* ── SERIA ──  todo, to get from API*/}
           {activeTab === "seria" && (
             <div className="book-detail-main">
               <div className="bd-series-header">
                 <h3 className="bd-series-name">{bookbyId.book.book_Series[0]?.series.name}</h3>
-                {/* <span className="bd-series-count">{bookbyId.book.book_Series[0]?.series.total} tomów</span> */}
+                <span className="bd-series-count">{bookbyId.book.book_Series[0]?.series.books_Count} volumes</span>
               </div>
               <div className="bd-series-list">
-                {["Diuna", "Mesjasz Diuny", "Dzieci Diuny", "Bóg Cesarz Diuny", "Heretycy Diuny", "Kapitularz Diuny"].map((title, i) => (
-                  <div className={`bd-series-item ${i === 0 ? "current" : ""}`} key={title}>
+                {bookbyId.book.book_Series[0]?.series?.book_Series.map((seriesBook, i) => (
+                  <div className={`bd-series-item ${i === 0 ? "current" : ""}`} key={seriesBook.book.title}>
                     <div className="bd-series-num">{i + 1}</div>
                     <div className="bd-series-info">
-                      <div className="bd-series-title">{title}</div>
+                      <div className="bd-series-title">{seriesBook.book.title}</div>
                       <div className="bd-series-status">
-                        {i === 0 ? <span style={{ color: "var(--gold)", fontSize: 12 }}>📖 Czytasz</span>
-                          : i < 0 ? <span style={{ color: "#52b788", fontSize: 12 }}>✓ Przeczytana</span>
-                          : <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Nie przeczytana</span>}
+                        {i === 0 ? <span style={{ color: "var(--gold)", fontSize: 12 }}>📖 Reading</span>
+                          : i < 0 ? <span style={{ color: "#52b788", fontSize: 12 }}>✓ Read</span>
+                          : <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Not Read</span>}
                       </div>
                     </div>
                     {i !== 0 && (
-                      <button className="add-btn-sm" style={{ flexShrink: 0 }}>+ Dodaj</button>
+                      <button className="add-btn-sm" style={{ flexShrink: 0 }}>+ Add</button>
                     )}
                   </div>
                 ))}

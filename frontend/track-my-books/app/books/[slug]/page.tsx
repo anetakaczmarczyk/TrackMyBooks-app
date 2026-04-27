@@ -18,7 +18,6 @@ async function fetchBookByIndex(slug: number): Promise<BookByIdResponse | null> 
     }
 
     const data = await response.json();
-    console.log("Fetched book data:", data);
     return data[0];
   } catch (error) {
     console.error("Error fetching books:", error);
