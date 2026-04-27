@@ -38,11 +38,11 @@ const LIBRARY: Record<string, {
 
 
 const STATUS_ICONS: Record<string, string> = {
-  "Czytam teraz":       "📖",
-  "Przeczytane":        "✅",
-  "Chcę przeczytać":    "🔖",
-  "Porzucone":          "💤",
-  "Listy książek":      "📚",
+  "Reading":       "📖",
+  "Read":        "✅",
+  "Want to Read":    "🔖",
+  "Abandoned":          "💤",
+  "Book Lists":      "📚",
 };
 
 function Stars({ rating }: { rating?: number }) {
@@ -70,11 +70,11 @@ export default function LibraryPage() {
         <div className="page-header">
           <div>
             <div className="page-eyebrow">
-              <span className="eyebrow-line" />Moja kolekcja
+              <span className="eyebrow-line" />My library, my rules
               <span className="eyebrow-line" />
             </div>
-            <h1 className="page-title">Moja biblioteczka</h1>
-            <p className="page-subtitle">{totalBooks} książek · {readBooks} przeczytanych</p>
+            <h1 className="page-title">My Library</h1>
+            <p className="page-subtitle">{totalBooks} books · {readBooks} read</p>
           </div>
         </div>
 
@@ -97,18 +97,18 @@ export default function LibraryPage() {
             <div className="lists-grid">
               {[
                 { name: "Sci-Fi must-read", count: 7, emoji: "🚀" },
-                { name: "Klasyka do śmierci", count: 12, emoji: "📜" },
-                { name: "Polecam znajomym", count: 4, emoji: "🎁" },
+                { name: "Classic must-read", count: 12, emoji: "📜" },
+                { name: "Recommended for Friends", count: 4, emoji: "🎁" },
               ].map(l => (
                 <div className="list-card" key={l.name}>
                   <span className="list-emoji">{l.emoji}</span>
                   <span className="list-name">{l.name}</span>
-                  <span className="list-count">{l.count} książek</span>
+                  <span className="list-count">{l.count} books</span>
                 </div>
               ))}
               <div className="list-card list-add">
                 <span className="list-emoji">+</span>
-                <span className="list-name">Nowa lista</span>
+                <span className="list-name">New List</span>
               </div>
             </div>
           </div>
@@ -148,16 +148,16 @@ export default function LibraryPage() {
                       <div className="lib-progress-fill" style={{ width: `${book.progress}%` }} />
                     </div>
                     <span className="lib-progress-text">
-                      {Math.round(book.pages * book.progress / 100)} / {book.pages} str.
+                      {Math.round(book.pages * book.progress / 100)} / {book.pages} pages
                     </span>
                   </div>
                 )}
-                <div className="lib-date">Dodano: {book.addedDate}</div>
+                <div className="lib-date">Added: {book.addedDate}</div>
               </div>
 
               <div className="lib-actions">
-                <button className="lib-action-btn" title="Edytuj">✏️</button>
-                <button className="lib-action-btn" title="Usuń">🗑</button>
+                <button className="lib-action-btn" title="Edit">✏️</button>
+                <button className="lib-action-btn" title="Delete">🗑</button>
               </div>
             </div>
           ))}
@@ -166,7 +166,7 @@ export default function LibraryPage() {
           <div className="lib-card lib-add-card">
             <div className="lib-add-inner">
               <span className="lib-add-icon">+</span>
-              <span className="lib-add-label">Dodaj książkę</span>
+              <span className="lib-add-label">Add Book</span>
             </div>
           </div>
         </div>

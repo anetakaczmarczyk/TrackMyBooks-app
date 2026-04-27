@@ -35,7 +35,7 @@ export function BookCard({ book }: { book: typeof BOOKS_TRENDING[0] }) {
         <div className={`book-overlay ${hovered ? "visible" : ""}`}>
           <span className="book-genre">{book.genre}</span>
           <div className="book-rating">★ {book.rating}</div>
-          <button className="add-btn">+ Dodaj do listy</button>
+          <button className="add-btn">+ Add to List</button>
         </div>
       </div>
       <div className="book-info">

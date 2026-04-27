@@ -47,13 +47,13 @@ export default function Home() {
         <div className="hero-content">
           <div className="hero-eyebrow">
             <span className="eyebrow-line" />
-            Twoja cyfrowa biblioteka
+            Your reading journey, tracked beautifully
             <span className="eyebrow-line" />
           </div>
-          <h1>Śledź swoją<br /><em>czytelniczą</em><br />podróż</h1>
-          <p>Kataloguj przeczytane książki, odkrywaj nowe tytuły i dziel się rekomendacjami ze społecznością miłośników literatury.</p>
+          <h1>Track Your<br /><em>Reading</em><br />Journey</h1>
+          <p>Keep a record of the books you've read, discover new titles, and share recommendations with the community of book lovers.</p>
           <div className="hero-cta">
-            <Link href="/signup" className="btn-gold btn-lg">Zacznij za darmo</Link>
+            <Link href="/signup" className="btn-gold btn-lg">Get Started for Free</Link>
           </div>
         </div>
         <div className="hero-books-float">
@@ -70,40 +70,40 @@ export default function Home() {
       </section>
 
       <main>
-        <Slider title="Popularne teraz" books={BOOKS_TRENDING} badge="🔥 Gorące" />
-        <Slider title="Nowości" books={BOOKS_NEW} />
+        <Slider title="Popular Now" books={BOOKS_TRENDING} badge="🔥 Hot" />
+        <Slider title="New Releases" books={BOOKS_NEW} />
 
         {/* FEATURE BANNER */}
         <div className="feature-banner">
           <div className="feature-banner-text">
-            <h2>Wszystko czego potrzebujesz jako czytelnik</h2>
-            <p>Od śledzenia przeczytanych stron po spersonalizowane rekomendacje — mamy wszystko pod kontrolą.</p>
+            <h2>Everything You Need as a Reader</h2>
+            <p>From tracking read pages to personalized recommendations — we've got it all under control.</p>
           </div>
           <div className="features-grid">
             <div className="feature-item">
               <div className="feature-icon">📖</div>
-              <h3>Biblioteka</h3>
-              <p>Kataloguj i zarządzaj swoimi książkami</p>
+              <h3>Library</h3>
+              <p>Organize and manage your book collection</p>
             </div>
             <div className="feature-item">
               <div className="feature-icon">📊</div>
-              <h3>Statystyki</h3>
-              <p>Śledź swój postęp czytelniczy</p>
+              <h3>Statistics</h3>
+              <p>Track your reading progress</p>
             </div>
             <div className="feature-item">
               <div className="feature-icon">🌟</div>
-              <h3>Rekomendacje</h3>
-              <p>Spersonalizowane propozycje dla Ciebie</p>
+              <h3>Recommendations</h3>
+              <p>Personalized suggestions for you</p>
             </div>
             <div className="feature-item">
               <div className="feature-icon">👥</div>
-              <h3>Społeczność</h3>
-              <p>Dziel się z innymi czytelnikami</p>
+              <h3>Community</h3>
+              <p>Share with other readers</p>
             </div>
           </div>
         </div>
 
-        <Slider title="Klasyka, którą warto przeczytać" books={[...BOOKS_TRENDING].reverse()} />
+        <Slider title="Classic, which you should read" books={[...BOOKS_TRENDING].reverse()} />
       </main>
 
     <Footer />

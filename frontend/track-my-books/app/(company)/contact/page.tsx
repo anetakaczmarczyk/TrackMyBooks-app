@@ -5,20 +5,20 @@ import {Navbar} from "@/_components/Navbar";
 import { Footer } from "@/_components/Footer";
 
 const TOPICS = [
-  "Pytanie ogólne",
-  "Problem techniczny",
-  "Propozycja funkcji",
-  "Współpraca",
-  "Prasa i media",
-  "Inne",
+  "General Question",
+  "Technical Issue",
+  "Feature Request",
+  "Partnership",
+  "Press and Media",
+  "Other",
 ];
 
 const FAQ = [
-  { q: "Czy Track My Books jest darmowy?",              a: "Wszystkie funkcje są całkowicie bezpłatne." },
-  { q: "Jak działa system rekomendacji?",               a: "Analizujemy Twoje oceny, gatunki i tempo czytania. Im więcej używasz aplikacji, tym trafniejsze stają się propozycje." },
-  { q: "Czy mogę importować dane z Goodreads?",         a: "Chwilowo nie, ale planujemy tę funkcję w przyszłości." },
-  { q: "Czy jest aplikacja mobilna?",                   a: "Nie, ale planujemy ją w przyszłości." },
-  { q: "Jak długo trwa odpowiedź na zgłoszenie?",       a: "Staramy się odpowiadać w ciągu 24 godzin w dni robocze. Pilne sprawy techniczne rozwiązujemy szybciej." },
+  { q: "Is Track My Books free?",                     a: "All features are completely free." },
+  { q: "How does the recommendation system work?",    a: "We analyze your ratings, genres, and reading pace. The more you use the app, the more accurate the suggestions become." },
+  { q: "Can I import data from Goodreads?",           a: "Not yet, but we plan to add this feature in the future." },
+  { q: "Is there a mobile app?",                      a: "Not yet, but we plan to develop one in the future." },
+  { q: "How long does it take to get a response?",    a: "We aim to respond within 24 hours on business days. Urgent technical issues are resolved more quickly." },
 ];
 
 
@@ -45,31 +45,30 @@ export default function ContactPage() {
 
         <div className="page-header">
           <div>
-            <div className="page-eyebrow"><span className="eyebrow-line" />Pomoc<span className="eyebrow-line" /></div>
-            <h1 className="page-title">Kontakt</h1>
-            <p className="page-subtitle">Jesteśmy tu dla Ciebie. Odpiszemy w ciągu 24 godzin.</p>
+            <div className="page-eyebrow"><span className="eyebrow-line" />Help<span className="eyebrow-line" /></div>
+            <h1 className="page-title">Contact Us</h1>
+            <p className="page-subtitle">We're here for you. We'll get back to you within 24 hours.</p>
           </div>
         </div>
 
         <div className="contact-grid">
 
-          {/* LEFT — form */}
           <div>
             {sent ? (
               <div className="contact-success">
                 <span className="contact-success-icon">✓</span>
-                <h3>Wiadomość wysłana!</h3>
-                <p>Odezwiemy się na adres <strong>{email}</strong> w ciągu 24 godzin.</p>
+                <h3>Message sent!</h3>
+                <p>We'll get back to you at <strong>{email}</strong> within 24 hours.</p>
                 <button className="btn-ghost" style={{ marginTop: 20 }} onClick={() => { setSent(false); setName(""); setEmail(""); setMessage(""); }}>
-                  Wyślij kolejną
+                  Send another message
                 </button>
               </div>
             ) : (
               <div className="stats-card" style={{ padding: 32 }}>
-                <h3 className="stats-card-title">Napisz do nas</h3>
+                <h3 className="stats-card-title">Write to us</h3>
 
                 <div className="field" style={{ marginBottom: 16 }}>
-                  <label style={{ display: "block", fontSize: 12, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-muted)", marginBottom: 7 }}>Temat</label>
+                  <label style={{ display: "block", fontSize: 12, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-muted)", marginBottom: 7 }}>Topic</label>
                   <select
                     className="sort-select"
                     style={{ width: "100%", padding: "12px 16px" }}
@@ -82,17 +81,17 @@ export default function ContactPage() {
 
                 <div className="contact-row-2">
                   <div className={`field ${focused === "name" ? "active" : ""}`}>
-                    <label>Imię i nazwisko</label>
+                    <label>Name and surname</label>
                     <div className="input-wrap">
-                      <input type="text" placeholder="Jan Kowalski" value={name}
+                      <input type="text" placeholder="John Doe" value={name}
                         onChange={e => setName(e.target.value)}
                         onFocus={() => setFocused("name")} onBlur={() => setFocused(null)} />
                     </div>
                   </div>
                   <div className={`field ${focused === "email" ? "active" : ""}`}>
-                    <label>Adres e-mail</label>
+                    <label>Email address</label>
                     <div className="input-wrap">
-                      <input type="email" placeholder="twoj@email.com" value={email}
+                      <input type="email" placeholder="your@email.com" value={email}
                         onChange={e => setEmail(e.target.value)}
                         onFocus={() => setFocused("email")} onBlur={() => setFocused(null)} />
                     </div>
@@ -100,10 +99,10 @@ export default function ContactPage() {
                 </div>
 
                 <div className={`field ${focused === "msg" ? "active" : ""}`}>
-                  <label>Wiadomość</label>
+                  <label>Message</label>
                   <textarea
                     className="contact-textarea"
-                    placeholder="Opisz szczegółowo swoje pytanie lub problem…"
+                    placeholder="Describe your question or problem in detail…"
                     value={message}
                     onChange={e => setMessage(e.target.value)}
                     onFocus={() => setFocused("msg")}
@@ -119,25 +118,23 @@ export default function ContactPage() {
                   disabled={!name || !email || !message || !emailValid}
                   onClick={handleSend}
                 >
-                  Wyślij wiadomość →
+                  Send message →
                 </button>
                 {!emailValid && email ? (  
                   <div style={{ marginTop: 8, color: "#e05252", fontSize: 12 }}>
-                    Proszę podać poprawny adres e-mail.
-              </div>
+                    Please enter a valid email address.
+                  </div>
                 ) : null}
               </div>
             )}
           </div>
 
-          {/* RIGHT — info + FAQ */}
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 
-            {/* Contact cards */}
             <div className="contact-info-cards">
               {[
-                { icon: "📞", label: "Telefon",       val: "+48 123 456 789",       sub: "Pon-Pt, 9:00-17:00" },
-                { icon: "✉️", label: "E-mail",         val: "hello@trackmybooks.pl",     sub: "Odpowiadamy w 24h" }
+                { icon: "📞", label: "Phone",       val: "+48 123 456 789",       sub: "Mon-Fri, 9:00-17:00" },
+                { icon: "✉️", label: "Email",         val: "hello@trackmybooks.pl",     sub: "We respond within 24h" }
               ].map(c => (
                 <div className="contact-info-card" key={c.label}>
                   <span className="contact-info-icon">{c.icon}</span>
@@ -150,9 +147,8 @@ export default function ContactPage() {
               ))}
             </div>
 
-            {/* FAQ */}
             <div className="stats-card" style={{ padding: 28 }}>
-              <h3 className="stats-card-title">Najczęstsze pytania</h3>
+              <h3 className="stats-card-title">Most Common Questions</h3>
               <div className="faq-list">
                 {FAQ.map((item, i) => (
                   <div className="faq-item" key={i}>

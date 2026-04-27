@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from "react";
 import { BookCard } from "@/_components/BookCard";
-import Link from "next/link";
 
 const BOOKS_TRENDING = [
   { id: 1, title: "Mistrz i Małgorzata", author: "Michaił Bułhakow", cover: "https://covers.openlibrary.org/b/id/8231856-L.jpg", rating: 4.9, genre: "Klasyka" },
@@ -53,7 +52,6 @@ export function Slider({ title, books, badge }: { title: string; books: typeof B
           {title}
           {badge && <span className="badge">{badge}</span>}
         </h2>
-        <Link href="/books" className="see-all">Zobacz wszystkie →</Link>
       </div>
       <div className="slider-wrapper">
         {canLeft && (

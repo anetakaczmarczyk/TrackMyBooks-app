@@ -8,33 +8,33 @@ export function Footer() {
               <div className="logo-icon">📚</div>
               <span className="logo-text">Track <span>My</span> Books</span>
             </div>
-            <p>Twoja cyfrowa biblioteka. Śledź, odkrywaj i dziel się swoją miłością do książek.</p>
+            <p>Your digital library. Track, discover, and share your love for books.</p>
           </div>
           <div className="footer-col">
-            <h4>Produkt</h4>
+            <h4>Product</h4>
             <ul>
-              <li><Link href="/books">Książki</Link></li>
-              <li><Link href="/recommendations">Rekomendacje</Link></li>
+              <li><Link href="/books">Books</Link></li>
+              <li><Link href="/recommendations">Recommendations</Link></li>
             </ul>
           </div>
           <div className="footer-col">
-            <h4>Firma</h4>
+            <h4>Company</h4>
             <ul>
-              <li><Link href="/about">O nas</Link></li>
-              <li><Link href="/contact">Kontakt</Link></li>
+              <li><Link href="/about">About Us</Link></li>
+              <li><Link href="/contact">Contact</Link></li>
             </ul>
           </div>
           <div className="footer-col">
-            <h4>Prawne</h4>
+            <h4>Legal</h4>
             <ul>
-              <li><Link href="/terms">Regulamin</Link></li>
-              <li><Link href="/privacy?tab=privacy">Prywatność</Link></li>
-              <li><Link href="/privacy?tab=cookies">Cookies</Link></li>
+              <li><Link href="/terms">Terms of Service</Link></li>
+              <li><Link href="/privacy?tab=privacy">Privacy Policy</Link></li>
+              <li><Link href="/privacy?tab=cookies">Cookie Policy</Link></li>
             </ul>
           </div>
         </div>
         <div className="footer-bottom">
-          <p>© 2026 Track My Books. Wszystkie prawa zastrzeżone.</p>
+          <p>© 2026 Track My Books. All rights reserved.</p>
         </div>
       </footer>
   );

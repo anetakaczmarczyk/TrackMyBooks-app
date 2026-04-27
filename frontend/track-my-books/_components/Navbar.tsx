@@ -16,12 +16,12 @@ export function Navbar() {
           <span className="logo-text">Track <span>My</span> Books</span>
         </Link>
         <ul className="nav-links">
-          <li><Link href="/books">Książki</Link></li>
-          <li><Link href="/recommendations">Rekomendacje</Link></li>
+          <li><Link href="/books">Books</Link></li>
+          <li><Link href="/recommendations">Recommendations</Link></li>
         </ul>
         <div className="nav-auth">
-          <Link className="btn-ghost" href="/login">Zaloguj</Link>
-          <Link className="btn-gold" href="/signup">Zarejestruj</Link>
+          <Link className="btn-ghost" href="/login">Login</Link>
+          <Link className="btn-gold" href="/signup">Sign Up</Link>
         </div>
       </nav>
     );
