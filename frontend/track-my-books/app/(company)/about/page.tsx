@@ -7,7 +7,7 @@ const VALUES = [
   { icon: "📖", title: "Reading as a lifestyle",    desc: "We believe that reading is not a hobby — it's a way to be more human." },
   { icon: "🌿", title: "Free from distractions",             desc: "No ads, no noise. Just you and your books." },
   { icon: "🤝", title: "Community beyond algorithms", desc: "The best recommendations still come from real readers." },
-  { icon: "✦",  title: "Jakość bez kompromisów",      desc: "Każdy detal ma znaczenie — od interfejsu po kurację treści." },
+  { icon: "✦",  title: "Quality without compromises",      desc: "Every detail matters — from the interface to content curation." },
 ];
 
 export default function AboutPage() {

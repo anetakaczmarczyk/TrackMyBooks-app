@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
+import { Suspense, use, useState } from "react";
 import {Navbar} from "@/_components/Navbar";
 import { Footer } from "@/_components/Footer";
 import { useSearchParams } from "next/navigation";
@@ -81,7 +81,7 @@ const COOKIE_TYPES = [
   },
 ];
 
-export default function PrivacyPage() {
+function PrivacyContent() {
   const searchParams = useSearchParams();
   const [tab, setTab] = useState<"privacy" | "cookies">(searchParams.get("tab") === "cookies" ? "cookies" : "privacy");
   if (searchParams.get("tab") != tab) {
@@ -94,7 +94,6 @@ export default function PrivacyPage() {
 
   return (
     <>
-      <Navbar />
       <div className="inner-page legal-page">
         <div className="legal-header">
           <div className="page-eyebrow"><span className="eyebrow-line" />Legal Documents<span className="eyebrow-line" /></div>
@@ -120,7 +119,7 @@ export default function PrivacyPage() {
         {tab === "privacy" && (
           <div className="legal-layout">
             <aside className="legal-toc">
-              <div className="legal-toc-title">Spis treści</div>
+              <div className="legal-toc-title">Table of Contents</div>
               <ul className="legal-toc-list">
                 {PRIVACY_SECTIONS.map(s => (
                   <li key={s.title}><a href={`#${s.title}`} className="legal-toc-link">{s.title}</a></li>
@@ -176,7 +175,18 @@ export default function PrivacyPage() {
           </div>
         )}
       </div>
-      <Footer />
     </>
   );
+}
+
+export default function PrivacyPage() {
+  return(
+    <>
+    <Navbar />
+    <Suspense fallback={<div className="inner-page">Loading...</div>}>
+      <PrivacyContent />
+    </Suspense>
+    <Footer />
+    </>
+  )
 }
