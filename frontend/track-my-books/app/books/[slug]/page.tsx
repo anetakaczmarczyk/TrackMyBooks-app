@@ -4,23 +4,23 @@ import { BookByIdResponse } from "@/_components/bookInterface";
 
 async function fetchBookByIndex(slug: number): Promise<BookByIdResponse | null> {
   try {
-    const response = await fetch("http://localhost:5000/api/books/bookById", {
+    const response = await fetch("http://book-service:5000/api/books/bookById", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ 
-        bookId: slug
-       }),
+      body: JSON.stringify({ bookId: slug }),
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "An error occurred while fetching books");
+      console.warn("API Error:", response.status);
+      return null;
     }
 
     const data = await response.json();
-    return data[0];
+    
+    return Array.isArray(data) ? (data[0] || null) : (data || null);
+
   } catch (error) {
-    // console.error("Error fetching books:", error);
+    console.error("BŁĄD FETCH w fetchBookByIndex:", error);
     return null;
   }
 }

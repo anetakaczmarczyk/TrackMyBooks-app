@@ -11,20 +11,29 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+
   book-service:
     build: ./backend/book-service
     ports:
-      - "5000:8080"
+      - "5000:5000"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+    networks:
+      - app-network
 
   frontend-web:
     build: ./frontend/track-my-books
     ports:
       - "3000:3000"
+    networks:
+      - app-network
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:5000
     depends_on:
       - book-service
 volumes:
   postgres_data:
+
+networks:
+  app-network:
+    driver: bridge

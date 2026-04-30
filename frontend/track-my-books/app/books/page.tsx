@@ -28,32 +28,12 @@ async function fetchBooks(startNumber: number, itemsPerPage: number): Promise<Bo
     });
     if (!response.ok) return [];
     return await response.json();
-  } catch {
+  } catch (e) {
+    console.error("BŁĄD FETCH:", e);
     return [];
   }
 }
 
-// Funkcja fetchująca dane dla SWR
-async function fetchAllBooks(): Promise<Book[]> {
-  let allBooks: Book[] = [];
-  const firstBatch = await fetchBooks(0, INITIAL_BATCH);
-  allBooks = [...firstBatch];
-
-  let offset = INITIAL_BATCH;
-  while (true) {
-    const batch = await fetchBooks(offset, 1000);
-    if (batch.length === 0) break;
-    
-    const filteredBatch = batch.filter(b => b.default_physical_edition_id !== null);
-    const uniqueBatch = filteredBatch.filter(b => 
-      !allBooks.some(existing => existing.default_physical_edition_id === b.default_physical_edition_id)
-    );
-
-    allBooks = [...allBooks, ...uniqueBatch];
-    offset += 1000;
-  }
-  return allBooks;
-}
 
 export default function BooksPage() {
   const { data: initialBooks } = useSWR('initial-books', () => fetchBooks(0, INITIAL_BATCH), {
@@ -67,6 +47,7 @@ export default function BooksPage() {
   const [isBackgroundLoading, setIsBackgroundLoading] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
     if (!initialBooks || initialBooks.length === 0) return;
 
     setAllBooks(initialBooks);
@@ -74,9 +55,9 @@ export default function BooksPage() {
 
     async function fetchRest() {
       let offset = INITIAL_BATCH;
-      while (true) {
+      while (isMounted) {
         const batch = await fetchBooks(offset, 1000);
-        if (batch.length === 0) break;
+        if (!isMounted || batch.length === 0) break;
         
         setAllBooks(prev => {
           const uniqueBatch = batch.filter(b => 
@@ -91,6 +72,7 @@ export default function BooksPage() {
     }
 
     fetchRest();
+    return () => { isMounted = false; };
   }, [initialBooks]);
 
   const [genre, setGenre] = useState("All");
