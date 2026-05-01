@@ -1,6 +1,8 @@
 using book_service.Services;
+using DbUp;
 
 var builder = WebApplication.CreateBuilder(args);
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 string token = File.ReadAllText("authorizationKey.txt").Trim();
 
@@ -22,6 +24,18 @@ builder.Services.AddCors(options =>
                   .AllowAnyMethod();
         });
 });
+
+var upgrader = DeployChanges.To
+    .PostgresqlDatabase(connectionString)
+    .WithScriptsEmbeddedInAssembly(System.Reflection.Assembly.GetExecutingAssembly())
+    .LogToConsole()
+    .Build();
+
+if (upgrader.IsUpgradeRequired())
+{
+    upgrader.PerformUpgrade();
+    Console.WriteLine("Database upgrade performed.");
+}
 
 var app = builder.Build();
 app.MapControllers();

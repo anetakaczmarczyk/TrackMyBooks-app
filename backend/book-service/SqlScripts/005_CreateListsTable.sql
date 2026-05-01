@@ -1,0 +1,9 @@
+CREATE TABLE IF NOT EXISTS Lists (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(255) REFERENCES Users(username) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    is_public BOOLEAN DEFAULT FALSE,
+    icon VARCHAR(1),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

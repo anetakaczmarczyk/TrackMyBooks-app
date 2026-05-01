@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS UserActivity (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(255) REFERENCES Users(username) ON DELETE CASCADE,
+    activity_type VARCHAR(255) NOT NULL,
+    book_title VARCHAR(255),
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
