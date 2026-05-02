@@ -5,5 +5,5 @@ CREATE TABLE IF NOT EXISTS Users (
     password_hash VARCHAR(255) NOT NULL,
     preferred_genres TEXT,
     bio TEXT DEFAULT '',
-    booksGoal INT DEFAULT 0
+    books_goal INT DEFAULT 0
 );

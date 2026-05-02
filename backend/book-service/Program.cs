@@ -37,6 +37,9 @@ if (upgrader.IsUpgradeRequired())
     Console.WriteLine("Database upgrade performed.");
 }
 
+builder.Services.AddScoped<UserRepository>();
+builder.Services.AddSingleton<DbConnectionFactory>();
+
 var app = builder.Build();
 app.MapControllers();
 app.UseCors("AllowLocalhost");

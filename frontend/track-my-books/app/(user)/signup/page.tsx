@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { User } from "@/_components/User";
+import { useRouter } from "next/navigation";
 
 const BG_BOOKS = [
   "https://covers.openlibrary.org/b/id/8758191-L.jpg",
@@ -21,7 +23,9 @@ const BG_BOOKS = [
 
 const GENRES = ["Classical", "Sci-Fi", "Fantasy", "Crime", "Romance", "History", "Thriller", "Biography", "Philosophy", "Poetry", "Horror", "Non-fiction"];
 
+
 export default function RegisterPage() {
+  const router = useRouter();
   const [name, setName] = useState("");
   const [nick, setNick] = useState("");
   const [email, setEmail] = useState("");
@@ -31,6 +35,8 @@ export default function RegisterPage() {
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [agree, setAgree] = useState(false);
   const [step, setStep] = useState(1);
+  const [emailExists, setEmailExists] = useState(false);
+  const [usernameExists, setUsernameExists] = useState(false);
 
   const toggleGenre = (g: string) =>
     setSelectedGenres(prev =>
@@ -40,12 +46,54 @@ export default function RegisterPage() {
   const strength = (() => {
     if (!password) return 0;
     let s = 1;
-    if (password.length >= 8) s++;
     if (/[A-Z]/.test(password)) s++;
     if (/[0-9]/.test(password)) s++;
     if (/[^A-Za-z0-9]/.test(password)) s++;
+    if (password.length >= 8) s++;
+    else s = 0;
     return s;
   })();
+
+  const checkEmailExists = async (email: string) => {
+    const response = await fetch(`http://localhost:5000/api/user/checkIfEmailIsTaken/${encodeURIComponent(email)}`);
+    const data = await response.json();
+    setEmailExists(data.taken);
+  }
+
+  const checkUsernameExists = async (username: string) => {
+    const response = await fetch(`http://localhost:5000/api/user/checkIfUsernameIsTaken/${encodeURIComponent(username)}`);
+    const data = await response.json();
+    console.log(data);
+    setUsernameExists(data.taken);
+  }
+
+  const handleCreateAccount = async () => {
+    const newUser: User = {
+      name,
+      username: nick,
+      email,
+      password_Hash: password,
+      preferred_Genres: selectedGenres.join(","),
+      bio: "",
+      booksGoal: 0
+    };
+
+    const response = await fetch("http://localhost:5000/api/user/createUser", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newUser)
+    });
+
+    if (!response.ok) {
+      alert("Failed to create account.");
+    } else {
+      alert("Account created successfully!");
+      setTimeout(() => {
+        router.push("/login");
+      }, 1000);
+    }
+  };
+  
 
   const strengthLabel = ["", "Weak", "Medium", "Strong", "Very Strong"][strength];
   const strengthColor = ["", "#e05252", "#e09452", "#c9a84c", "#52b788"][strength];
@@ -158,9 +206,15 @@ export default function RegisterPage() {
                       value={nick}
                       onChange={e => setNick(e.target.value)}
                       onFocus={() => setFocused("nick")}
-                      onBlur={() => setFocused(null)}
+                      onBlur={() => {
+                        setFocused(null);
+                        checkUsernameExists(nick);
+                      }}
                     />
                     <span className="input-icon">👥</span>
+                    {usernameExists && (
+                      <span className="strength-label" style={{ color: "#e05252" }}>Username is already taken.</span>
+                    )}
                   </div>
                 </div>
 
@@ -173,10 +227,16 @@ export default function RegisterPage() {
                       value={email}
                       onChange={e => setEmail(e.target.value)}
                       onFocus={() => setFocused("email")}
-                      onBlur={() => setFocused(null)}
+                      onBlur={() => {
+                        setFocused(null);
+                        checkEmailExists(email);
+                      }}
                     />
                     <span className="input-icon">✉</span>
-                </div>
+                    {emailExists && (
+                      <span className="strength-label" style={{ color: "#e05252" }}>Email is already taken.</span>
+                    )}
+                  </div>
                   {email && (
                     <div >
                       <span className="strength-label" style={{ color: "#e05252" }}>{emailValid ? "" : "Invalid email address"}</span>
@@ -202,7 +262,7 @@ export default function RegisterPage() {
                       {showPass ? "🙈" : "👁"}
                     </span>
                   </div>
-                  {password && (
+                  {(password && strength > 0) && (
                     <div className="strength-bar">
                       {[1,2,3,4].map(i => (
                         <div
@@ -223,7 +283,7 @@ export default function RegisterPage() {
                 <button
                   className="btn-submit"
                   onClick={() => setStep(2)}
-                  disabled={!name || !nick || !email || !password || !emailValid || strength < 2}
+                  disabled={!name || !nick || !email || !password || !emailValid || strength < 2 || emailExists || usernameExists}
                 >
                   Next →
                 </button>
@@ -281,6 +341,7 @@ export default function RegisterPage() {
                 <button
                   className="btn-submit"
                   disabled={!agree}
+                  onClick={() => handleCreateAccount()}
                 >
                   Create Account ✓
                 </button>
