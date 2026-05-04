@@ -55,15 +55,22 @@ export default function RegisterPage() {
   })();
 
   const checkEmailExists = async (email: string) => {
+    if (!email) {
+      setEmailExists(false);
+      return;
+    }
     const response = await fetch(`http://localhost:5000/api/user/checkIfEmailIsTaken/${encodeURIComponent(email)}`);
     const data = await response.json();
     setEmailExists(data.taken);
   }
 
   const checkUsernameExists = async (username: string) => {
+    if (!username) {
+      setUsernameExists(false);
+      return;
+    }
     const response = await fetch(`http://localhost:5000/api/user/checkIfUsernameIsTaken/${encodeURIComponent(username)}`);
     const data = await response.json();
-    console.log(data);
     setUsernameExists(data.taken);
   }
 

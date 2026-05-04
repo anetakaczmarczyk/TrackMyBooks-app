@@ -22,12 +22,20 @@ public class UserController : ControllerBase
     [HttpGet("checkIfEmailIsTaken/{email}")]
     public async Task<IActionResult> CheckIfEmailIsTaken([FromRoute] string email)
     {
+        if (string.IsNullOrEmpty(email))
+        {
+            return Ok(new { taken = false });
+        }
         var userExists = await _userRepository.CheckIfEmailIsTaken(email);
         return Ok(new { taken = userExists });
     }
     [HttpGet("checkIfUsernameIsTaken/{username}")]
     public async Task<IActionResult> CheckIfUsernameIsTaken([FromRoute] string username)
     {
+        if (string.IsNullOrEmpty(username))
+        {
+            return Ok(new { taken = false });
+        }
         var userExists = await _userRepository.CheckIfUsernameIsTaken(username);
         return Ok(new { taken = userExists });
     }
