@@ -18,12 +18,30 @@ const BG_BOOKS = [
   "https://covers.openlibrary.org/b/id/8091016-L.jpg",
 ];
 
+
+
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
   const [focused, setFocused] = useState<string | null>(null);
 
+  
+  const handleLogin = async () => {
+    const res = await fetch("http://localhost:5000/api/user/login",{
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ Email: email, Password: password }),
+      credentials: "include"
+    });
+    if(res.ok){
+      window.location.href = "/dashboard";
+    } else {
+      alert("Login failed. Please check your credentials.");
+    }
+  };
   return (
 
 <div className="page">
@@ -118,7 +136,9 @@ export default function LoginPage() {
               <a href="#" className="forgot-link">Forgot your password?</a>
             </div>
 
-            <button className="btn-submit">Sign in</button>
+            <button className="btn-submit" onClick={() => handleLogin()}>
+              Sign in
+            </button>
 
             <div className="form-footer">
               Don't have an account?{" "}

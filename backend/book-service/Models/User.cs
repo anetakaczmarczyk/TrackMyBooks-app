@@ -8,3 +8,9 @@ public class User
     public string Bio { get; set; } = string.Empty;
     public int BooksGoal { get; set; } = 0;
 }
+
+public class LoginRequest
+{
+    public string Email { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
+}

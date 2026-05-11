@@ -25,4 +25,10 @@ public class UserRepository
         int count = await connection.ExecuteScalarAsync<int>(query, new { Username = username });
         return count > 0;
     }
+    public async Task<User> GetUserByEmail(string email)
+    {
+        using var connection = _db.CreateConnection();
+        var query = "SELECT * FROM Users WHERE email = @Email";
+        return await connection.QuerySingleOrDefaultAsync<User>(query, new { Email = email });
+    }
 }
