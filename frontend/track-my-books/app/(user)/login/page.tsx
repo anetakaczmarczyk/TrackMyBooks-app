@@ -1,7 +1,9 @@
 "use client";
 
+import { useAuth } from "@/_context/AuthContext";
 import Link from "next/dist/client/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 const BG_BOOKS = [
   "https://covers.openlibrary.org/b/id/8231856-L.jpg",
@@ -21,19 +23,33 @@ const BG_BOOKS = [
 
 
 export default function LoginPage() {
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
+  const [remember, setRemember] = useState(false);
   const [focused, setFocused] = useState<string | null>(null);
 
-  
+  useEffect(() => {
+      if (!authLoading && user) router.replace("/dashboard");
+    }, [user, authLoading, router]);
+
+  if (authLoading) {
+    return <div className="loading-screen">Loading...</div>;
+  }
+
+  if (user) {
+    return null; 
+  }
+
   const handleLogin = async () => {
     const res = await fetch("http://localhost:5000/api/user/login",{
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ Email: email, Password: password }),
+      body: JSON.stringify({ Email: email, Password: password, RememberMe: remember }),
       credentials: "include"
     });
     if(res.ok){
@@ -130,7 +146,7 @@ export default function LoginPage() {
 
             <div className="field-row">
               <label className="remember">
-                <input type="checkbox" />
+                <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
                 <span>Remember me</span>
               </label>
               <a href="#" className="forgot-link">Forgot your password?</a>

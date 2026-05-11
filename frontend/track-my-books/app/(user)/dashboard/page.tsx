@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/_components/Navbar";
 import { useAuth } from "@/_context/AuthContext";
+import { Footer } from "@/_components/Footer";
 
 /* ── Types ── */
 interface ReadingBook {
@@ -105,9 +106,8 @@ export default function DashboardPage() {
   const [activity, setActivity]     = useState<ActivityItem[]>(MOCK_ACTIVITY);
   const [dataLoading, setDataLoading] = useState(false);
 
-  // Redirect if not logged in
   useEffect(() => {
-    if (!authLoading && !user) router.push("/login");
+    if (!authLoading && !user) router.push("/");
   }, [user, authLoading, router]);
 
   // Load dashboard data
@@ -333,6 +333,7 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+      <Footer />
     </>
   );
 }

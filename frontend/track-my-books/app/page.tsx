@@ -4,6 +4,9 @@ import { Slider } from "@/_components/BookSlider";
 import { Navbar } from "@/_components/Navbar";
 import { Footer } from "@/_components/Footer";
 import Link from "next/link";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/_context/AuthContext";
 
 const BOOKS_TRENDING = [
   { id: 1, title: "Mistrz i Małgorzata", author: "Michaił Bułhakow", cover: "https://covers.openlibrary.org/b/id/8231856-L.jpg", rating: 4.9, genre: "Klasyka" },
@@ -37,6 +40,20 @@ const BOOKS_NEW = [
 
 
 export default function Home() {
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
+  useEffect(() => {
+      if (!authLoading && user) router.replace("/dashboard");
+    }, [user, authLoading, router]);
+
+  if (authLoading) {
+    return <div className="loading-screen">Loading...</div>;
+  }
+
+  if (user) {
+    return null; 
+  }
+  
   return (
     <>
     <Navbar />

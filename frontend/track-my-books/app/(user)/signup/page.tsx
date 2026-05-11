@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { User } from "@/_components/User";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/_context/AuthContext";
 
 const BG_BOOKS = [
   "https://covers.openlibrary.org/b/id/8758191-L.jpg",
@@ -25,6 +26,7 @@ const GENRES = ["Classical", "Sci-Fi", "Fantasy", "Crime", "Romance", "History",
 
 
 export default function RegisterPage() {
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [name, setName] = useState("");
   const [nick, setNick] = useState("");
@@ -37,6 +39,18 @@ export default function RegisterPage() {
   const [step, setStep] = useState(1);
   const [emailExists, setEmailExists] = useState(false);
   const [usernameExists, setUsernameExists] = useState(false);
+
+  useEffect(() => {
+      if (!authLoading && user) router.replace("/dashboard");
+    }, [user, authLoading, router]);
+
+  if (authLoading) {
+    return <div className="loading-screen">Loading...</div>;
+  }
+
+  if (user) {
+    return null; 
+  } 
 
   const toggleGenre = (g: string) =>
     setSelectedGenres(prev =>

@@ -101,22 +101,23 @@ public class UserController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
-        Console.WriteLine($"Login attempt for email: {request.Email}, password: {request.Password}");
         var user = await _userRepository.GetUserByEmail(request.Email);
         if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.Password_Hash))
         {
-            Console.WriteLine("Invalid email or password");
             return Unauthorized("Invalid email or password");
         }
 
         var token = GenerateJwtToken(user);
-        Console.WriteLine($"Generated JWT token: {token}");
-        Response.Cookies.Append("authToken", token, new CookieOptions
+        var cookieOptions = new CookieOptions
         {
             HttpOnly = true,
             SameSite = SameSiteMode.Strict,
-            Expires = DateTime.UtcNow.AddDays(7)
-        });
+        };
+        if (request.RememberMe)
+        {
+            cookieOptions.Expires = DateTime.UtcNow.AddDays(7);
+        }
+        Response.Cookies.Append("authToken", token, cookieOptions);
 
         return Ok(new { token });
     }
