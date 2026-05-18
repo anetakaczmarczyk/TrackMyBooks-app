@@ -1,8 +1,11 @@
 "use client";
 
+import { useEffect } from "react";
 import { useState } from "react";
 import Link from "next/link";
 import {Navbar} from "@/_components/Navbar";
+import { useAuth } from "@/_context/AuthContext";
+import { useRouter } from "next/navigation";
 
 const SETTING_TABS = [
   { id: "konto",         icon: "👤", label: "Account"              },
@@ -31,23 +34,127 @@ function SettingsRow({ label, sub, children }: { label: string; sub?: string; ch
 }
 
 export default function SettingsPage() {
-  const [tab, setTab] = useState("konto");
+  const { user, loading: authLoading, refreshUser } = useAuth();
+  const router = useRouter();
 
-  // Konto fields
-  const [displayName, setDisplayName] = useState("Adam Kowalski");
-  const [handle, setHandle]           = useState("adam.czyta");
-  const [email, setEmail]             = useState("adam@email.com");
-  const [bio, setBio]                 = useState("Miłośnik sci-fi i klasyki. 📚");
+  const [tab, setTab] = useState("konto");
+  const [passwdChanged, setPasswdChanged] = useState(false);
+
+  const [displayName, setDisplayName] = useState("");
+  const [handle, setHandle]           = useState("");
+  const [email, setEmail]             = useState("");
+  const [bio, setBio]                 = useState("");
+  const [booksGoal, setBooksGoal]         = useState(0);
   const [savedKonto, setSavedKonto]   = useState(false);
 
-  // Hasło
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleteConformation, setDeleteConformation] = useState("");
+
+  const [fetchError, setFetchError]   = useState("");
+  const [passwdError, setPasswdError]     = useState("");
+  const [deleteError, setDeleteError] = useState("");
+
+
   const [currPass, setCurrPass]   = useState("");
   const [newPass, setNewPass]     = useState("");
   const [confPass, setConfPass]   = useState("");
   const [showP, setShowP]         = useState(false);
 
+  useEffect(() => {
+    if (!authLoading && !user) router.push("/");
+  }, [user, authLoading, router]);
 
+  useEffect(() => {
+    if (user) {
+      setDisplayName(user.name || ""); 
+      setHandle(user.username || "");
+      setEmail(user.email || "");
+      setBio(user.bio || "");
+      setBooksGoal(user.books_Goal || 0);
+    }
+  }, [user]);
+  
+  if (authLoading || !user) {
+    return (
+      <><Navbar />
+        <div className="inner-page books-loading">
+          <div className="books-loading-spinner" />
+          <p>Loading…</p>
+        </div>
+      </>
+    );
+  }
 
+  const changeData = async() => {
+    try{
+      const res = await fetch("http://localhost:5000/api/user/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: displayName,
+          email,
+          bio,
+          books_Goal: booksGoal
+        }),
+        credentials: "include"});
+        if (!res.ok) {
+          throw new Error("Failed to update account information.");
+        }
+        await refreshUser?.();
+        setSavedKonto(true);
+        setTimeout(() => setSavedKonto(false), 3000);
+      } catch (err) {
+        console.error(err);
+        setFetchError("Failed to update account information.");
+      }
+  };
+
+  const changePassword = async() => {
+    if (newPass !== confPass) {
+      setPasswdError("New password and confirmation do not match.");
+      return;
+    }
+    const res =await fetch("http://localhost:5000/api/user/changePassword", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email,
+        currentPassword: currPass,
+        newPassword: newPass
+      }),
+      credentials: "include"
+    })
+    if (!res.ok) {
+      setPasswdError("Failed to change password. Please check your current password and try again.");
+      return;
+    }
+    setPasswdError("");
+    setCurrPass("");
+    setNewPass("");
+    setConfPass("");
+    setPasswdChanged(true);
+    setTimeout(() => setPasswdChanged(false), 3000);
+  };
+
+  const deleteAccount = async() => {
+    const res = await fetch("http://localhost:5000/api/user/delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email,
+        password: deletePassword,
+        confirmation: deleteConformation
+      }),
+      credentials: "include"
+    });
+    if (!res.ok) {
+      setDeleteError("Failed to delete account.");
+      return;
+    }
+    await refreshUser?.();
+    router.push("/");
+    
+  }
 
 
   const strength = (() => {
@@ -99,11 +206,7 @@ export default function SettingsPage() {
                 <h2 className="settings-panel-title">Account Information</h2>
 
                 <div className="settings-avatar-row">
-                  <div className="settings-avatar">AK</div>
-                  <div>
-                    <button className="add-btn-sm">Change Avatar</button>
-                    <p className="settings-hint">JPG, PNG, max. 2 MB</p>
-                  </div>
+                  <div className="settings-avatar">{user?.name?.split(" ").map(n => n[0]).join("") || "U"}</div>
                 </div>
 
                 <div className="settings-fields-grid">
@@ -123,7 +226,7 @@ export default function SettingsPage() {
                   <div className="field" style={{ gridColumn: "1 / -1" }}>
                     <label>Email Address</label>
                     <div className="input-wrap">
-                      <input value={email} onChange={e => setEmail(e.target.value)} type="email" />
+                      <input value={email} disabled type="email" />
                       <span className="input-icon">✉</span>
                     </div>
                   </div>
@@ -143,11 +246,12 @@ export default function SettingsPage() {
                 <div className="settings-field-group">
                   <div className="settings-group-title">Reading Goal 2026</div>
                   <SettingsRow label="Number of books per year" sub="Used in statistics and on your profile">
-                    <input type="number" className="settings-number-input" defaultValue={24} min={1} max={365} />
+                    <input type="number" className="settings-number-input" value={booksGoal} onChange={e => setBooksGoal(parseInt(e.target.value) || 0)} min={1} max={365} />
                   </SettingsRow>
                 </div>
 
-                <button className="btn-submit" style={{ marginTop: 24, maxWidth: 200 }} onClick={() => { setSavedKonto(true); setTimeout(() => setSavedKonto(false), 2500); }}>
+                {fetchError && <div className="settings-error-toast">{fetchError}</div>}
+                <button className="btn-submit" style={{ marginTop: 24, maxWidth: 200 }} onClick={() => changeData()}>
                   Save Changes
                 </button>
                 {savedKonto && <div className="settings-saved-toast">✓ Changes saved</div>}
@@ -193,9 +297,12 @@ export default function SettingsPage() {
                       )}
                     </div>
                   </div>
-                  <button className="btn-submit" style={{ maxWidth: 220 }} disabled={!currPass || !newPass || newPass !== confPass || strength < 2}>
+                  <button className="btn-submit" style={{ maxWidth: 220 }} disabled={!currPass || !newPass || newPass !== confPass || strength < 2} onClick={changePassword}>
                     Change Password
                   </button>
+
+                  {passwdError && <div className="settings-error-toast">{passwdError}</div>}
+                  {passwdChanged && <div className="settings-saved-toast">✓ Password changed</div>}
                 </div>
               </div>
             )}
@@ -218,18 +325,19 @@ export default function SettingsPage() {
                     <div className="field">
                       <label>Enter your password to confirm</label>
                       <div className="input-wrap">
-                        <input type="password" placeholder="••••••••" style={{ maxWidth: 320 }} />
+                        <input type="password" value={deletePassword} onChange={e => setDeletePassword(e.target.value)} placeholder="••••••••" style={{ maxWidth: 320 }} />
                       </div>
                     </div>
                     <div className="field">
                       <label>Enter "DELETE ACCOUNT" to confirm</label>
                       <div className="input-wrap">
-                        <input type="text" placeholder="DELETE ACCOUNT" style={{ maxWidth: 320 }} />
+                        <input type="text" placeholder="DELETE ACCOUNT" value={deleteConformation} onChange={e => setDeleteConformation(e.target.value)} style={{ maxWidth: 320 }} />
                       </div>
                     </div>
-                    <button className="btn-danger" style={{ marginTop: 8 }}>
+                    <button className="btn-danger" disabled={deleteConformation !== "DELETE ACCOUNT"} style={{ marginTop: 8 }} onClick={deleteAccount}>
                       Permanently delete account
                     </button>
+                  {deleteError && <div className="settings-error-toast">{deleteError}</div>}
                   </div>
                 </div>
               </div>

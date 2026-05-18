@@ -7,6 +7,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   logout: () => Promise<void>;
+  refreshUser?: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -14,20 +15,34 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser]       = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-
+  
   useEffect(() => {
-    fetch("http://localhost:5000/api/user/me", {
-      method: "GET",
-      credentials: "include",
-    })
-      .then(res => res.ok ? res.json() : null)
-      .then(data => {
-        if (data) setUser(data);
-      })
-      .catch(() => setUser(null))
-      .finally(() => setLoading(false));
+      fetchCurrentUser().finally(() => setLoading(false));
+    }, []);
 
-  }, []);
+  const fetchCurrentUser = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/user/me", {
+        method: "GET",
+        credentials: "include",
+      });
+      if (res.ok){
+
+        const data = await res.json();
+        setUser(data);
+      } else {
+        setUser(null);
+      }
+    } catch (err) {
+      setUser(null);
+    }
+  };
+
+  const refreshUser = async () => {
+    setLoading(true);
+    await fetchCurrentUser();
+    setLoading(false);
+  };
 
   const logout = async () => {
     try {
@@ -44,7 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, logout }}>
+    <AuthContext.Provider value={{ user, loading, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

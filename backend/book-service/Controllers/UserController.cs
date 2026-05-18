@@ -122,4 +122,38 @@ public class UserController : ControllerBase
         return Ok(new { token });
     }
 
+
+    [HttpPost("update")]
+    public async Task<IActionResult> UpdateUser([FromBody] ChangeUserDataRequest user)
+    {
+        await _userRepository.UpdateUser(user);
+        return Ok("User updated!");
+    }
+
+    [HttpPost("changePassword")]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+    {
+        var user = await _userRepository.GetUserByEmail(request.Email);
+        if (user == null || !BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.Password_Hash))
+        {
+            return Unauthorized("Invalid password");
+        }
+        await _userRepository.UpdatePassword(request);
+        return Ok("Password updated!");
+    }
+
+    [HttpPost("delete")]
+    public async Task<IActionResult> DeleteAccount([FromBody] DeleteAccountRequest request)
+    {
+        var user = await _userRepository.GetUserByEmail(request.Email);
+        if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.Password_Hash) || request.Confirmation != "DELETE ACCOUNT")
+        {
+            Console.WriteLine($"Delete account failed: user={user}, confirmationValid={request.Confirmation == "DELETE ACCOUNT"}");
+            return Unauthorized("Invalid password");
+        }
+        await _userRepository.DeleteUser(request);
+        Logout();
+        return Ok("Account deleted!");
+    }
+
 }

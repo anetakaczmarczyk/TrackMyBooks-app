@@ -54,8 +54,23 @@ builder.Services.AddAuthentication(options =>
                 context.Token = accessToken;
             }
             return Task.CompletedTask;
+        },
+
+        OnChallenge = async context =>
+        {
+            context.HandleResponse();
+            context.Response.StatusCode = 401;
+            context.Response.ContentType = "application/json";
+
+            if (context.Request.Headers.ContainsKey("Origin"))
+            {
+                context.Response.Headers.Append("Access-Control-Allow-Origin", "http://localhost:3000");
+                context.Response.Headers.Append("Access-Control-Allow-Credentials", "true");
+            }
+            await context.Response.WriteAsync("{\"error\": \"Unauthorized\"}");
         }
     };
+
 });
 
 var upgrader = DeployChanges.To

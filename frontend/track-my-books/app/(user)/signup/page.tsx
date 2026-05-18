@@ -96,7 +96,7 @@ export default function RegisterPage() {
       password_Hash: password,
       preferred_Genres: selectedGenres.join(","),
       bio: "",
-      booksGoal: 0
+      books_Goal: 0
     };
 
     const response = await fetch("http://localhost:5000/api/user/createUser", {

@@ -5,5 +5,5 @@ export interface User {
     password_Hash: string;
     preferred_Genres: string;
     bio: string;
-    booksGoal: number;
+    books_Goal: number;
 }

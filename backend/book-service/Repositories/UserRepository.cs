@@ -8,7 +8,7 @@ public class UserRepository
     public async Task CreateUser(User user)
     {
         using var connection = _db.CreateConnection();
-        var query = "INSERT INTO Users (name, username, email, password_hash, preferred_genres, bio, books_goal) VALUES (@Name, @Username, @Email, @Password_Hash, @Preferred_Genres, @Bio, @BooksGoal)";
+        var query = "INSERT INTO Users (name, username, email, password_hash, preferred_genres, bio, books_goal) VALUES (@Name, @Username, @Email, @Password_Hash, @Preferred_Genres, @Bio, @Books_Goal)";
         await connection.ExecuteAsync(query, user);
     }
     public async Task<bool> CheckIfEmailIsTaken(string email)
@@ -30,5 +30,27 @@ public class UserRepository
         using var connection = _db.CreateConnection();
         var query = "SELECT * FROM Users WHERE email = @Email";
         return await connection.QuerySingleOrDefaultAsync<User>(query, new { Email = email });
+    }
+
+    public async Task UpdateUser(ChangeUserDataRequest user)
+    {
+        using var connection = _db.CreateConnection();
+        var query = "UPDATE Users SET name = @Name, bio = @Bio, books_goal = @Books_Goal WHERE email = @Email";
+        await connection.ExecuteAsync(query, user);
+    }
+    
+    public async Task UpdatePassword(ChangePasswordRequest request)
+    {
+        using var connection = _db.CreateConnection();
+        string passwordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+        var query = "UPDATE Users SET password_hash = @Password_Hash WHERE email = @Email";
+        await connection.ExecuteAsync(query, new { Password_Hash = passwordHash, Email = request.Email });
+    }
+
+    public async Task DeleteUser(DeleteAccountRequest request)
+    {
+        using var connection = _db.CreateConnection();
+        var query = "DELETE FROM Users WHERE email = @Email";
+        await connection.ExecuteAsync(query, new { Email = request.Email });
     }
 }
