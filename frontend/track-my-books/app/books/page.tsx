@@ -217,7 +217,6 @@ export default function BooksPage() {
                     className="book-grid-cover"
                   />
                   <div className="book-grid-overlay">
-                    <button className="add-btn">+ Add to library</button>
                     <Link href={`/books/${book.default_physical_edition_id}`} className="overlay-detail">Details →</Link>
                   </div>
                 </div>

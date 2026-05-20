@@ -1,5 +1,5 @@
 export interface Book {
-    default_physical_edition_id: number;
+    default_Physical_Edition_Id: number;
     description: string;
     title: string;
     pages: number;
@@ -30,7 +30,7 @@ export interface Book {
 export interface BookInSeries {
     position: number;
     book: {
-        default_physical_edition_id: number;
+        default_Physical_Edition_Id: number;
         title: string;
     }
 }

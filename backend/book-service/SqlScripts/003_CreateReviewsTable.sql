@@ -4,5 +4,6 @@ CREATE TABLE IF NOT EXISTS Reviews (
     book_id INT NOT NULL,
     rating INT CHECK (rating >= 1 AND rating <= 5),
     review_text TEXT,
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(username, book_id)
 );

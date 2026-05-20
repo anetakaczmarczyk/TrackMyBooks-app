@@ -86,6 +86,8 @@ if (upgrader.IsUpgradeRequired())
 }
 
 builder.Services.AddScoped<UserRepository>();
+builder.Services.AddScoped<ReviewRepository>();
+builder.Services.AddScoped<BooksdbRepository>();
 builder.Services.AddSingleton<DbConnectionFactory>();
 
 var app = builder.Build();

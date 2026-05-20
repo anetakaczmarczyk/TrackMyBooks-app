@@ -1,3 +1,4 @@
+import { Review } from "@/_components/Review";
 import BookDetail from "./bookDetail";
 import { BookByIdResponse } from "@/_components/bookInterface";
 
@@ -25,6 +26,21 @@ async function fetchBookByIndex(slug: number): Promise<BookByIdResponse | null> 
   }
 }
 
+async function fetchBookReviews(externalBookId: number): Promise<Review[] | []> {
+  try {
+    const response = await fetch(`http://book-service:5000/api/reviews/book/${externalBookId}`);
+    if (!response.ok) {
+      console.warn("API Error:", response.status);
+      return [];
+    }
+    const data = await response.json();
+    return Array.isArray(data) ? data : (data || []);
+  } catch (error) {
+    console.error("Fetch error in fetchBookReviews:", error);
+    return [];
+  }
+}
+
 export default async function BookDetailPage({
   params,
 }: {
@@ -32,8 +48,9 @@ export default async function BookDetailPage({
 }) {
   const { slug } = await params;
   const book = await fetchBookByIndex(parseInt(slug));
+  const reviews = await fetchBookReviews(parseInt(slug));
 
   if (!book) return <div className="inner-page">Book not found.</div>;
 
-  return <BookDetail bookbyId={book} />;
+  return <BookDetail bookbyId={book} reviews={reviews} />;
 }

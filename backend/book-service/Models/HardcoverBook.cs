@@ -31,8 +31,7 @@ public class BookById
 
 public class BookDetail
 {
-    [JsonPropertyName("default_cover_edition_id")]
-    public int Id { get; set; } = 0;
+    public int Default_Physical_Edition_Id { get; set; } = 0;
     public string Title { get; set; } = string.Empty;
     public ImageDetail Cached_Image { get; set; } = new();
     public string Description { get; set; } = string.Empty;
