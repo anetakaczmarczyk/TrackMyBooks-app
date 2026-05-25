@@ -70,4 +70,11 @@ public class BooksdbRepository
         var query = "DELETE FROM ReadingStatus WHERE username = @Username AND book_id = @BookId";
         await connection.ExecuteAsync(query, new { Username = username, BookId = bookId });
     }
+
+    public async Task<IEnumerable<ReadingStatus>> GetUserReadingStatuses(string username)
+    {
+        using var connection = _db.CreateConnection();
+        var query = "SELECT * FROM ReadingStatus WHERE username = @Username";
+        return await connection.QueryAsync<ReadingStatus>(query, new {Username = username });
+    }
 }

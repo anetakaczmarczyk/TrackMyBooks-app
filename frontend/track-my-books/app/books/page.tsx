@@ -27,7 +27,13 @@ async function fetchBooks(startNumber: number, itemsPerPage: number): Promise<Bo
       body: JSON.stringify({ startNumber, itemsPerPage }),
     });
     if (!response.ok) return [];
-    return await response.json();
+    const data = await response.json();
+    return data
+    .filter((b: any) => b.default_physical_edition_id)
+    .map((book: any) =>({
+      ...book,
+      default_Physical_Edition_Id: book.default_physical_edition_id,
+    }));
   } catch (e) {
     console.error("BŁĄD FETCH:", e);
     return [];
@@ -58,10 +64,9 @@ export default function BooksPage() {
       while (isMounted) {
         const batch = await fetchBooks(offset, 1000);
         if (!isMounted || batch.length === 0) break;
-        
         setAllBooks(prev => {
           const uniqueBatch = batch.filter(b => 
-            !prev.some(existing => existing.default_physical_edition_id === b.default_physical_edition_id)
+            !prev.some(existing => existing.default_Physical_Edition_Id === b.default_Physical_Edition_Id)
           );
           return [...prev, ...uniqueBatch];
         });
@@ -74,6 +79,7 @@ export default function BooksPage() {
     fetchRest();
     return () => { isMounted = false; };
   }, [initialBooks]);
+
 
   const [genre, setGenre] = useState("All");
   const [sort, setSort] = useState(SORTS[0]);
@@ -209,7 +215,7 @@ export default function BooksPage() {
         {!loading && view === "grid" && paginated.length > 0 && (
           <div className="books-grid">
             {paginated.map(book => (
-              <div className="book-grid-card" key={book.default_physical_edition_id}>
+              <div className="book-grid-card" key={book.default_Physical_Edition_Id}>
                 <div className="book-grid-cover-wrap">
                   <img
                     src={book.cached_Image.url || undefined}
@@ -217,7 +223,7 @@ export default function BooksPage() {
                     className="book-grid-cover"
                   />
                   <div className="book-grid-overlay">
-                    <Link href={`/books/${book.default_physical_edition_id}`} className="overlay-detail">Details →</Link>
+                    <Link href={`/books/${book.default_Physical_Edition_Id}`} className="overlay-detail">Details →</Link>
                   </div>
                 </div>
                 <div className="book-grid-info">
@@ -238,7 +244,7 @@ export default function BooksPage() {
         {!loading && view === "list" && paginated.length > 0 && (
           <div className="books-list">
             {paginated.map(book => (
-              <div className="book-list-row" key={book.default_physical_edition_id}>
+              <div className="book-list-row" key={book.default_Physical_Edition_Id}>
                 <img
                   src={book.cached_Image.url || undefined}
                   alt={book.title}

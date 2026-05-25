@@ -99,4 +99,14 @@ public class GraphQLResponse
 
 }
 
+public class UserLibraryItemDto
+{
+    public string Status { get; set; } = string.Empty;
+    public int Progress { get; set; }
+    public DateOnly? Start_Date { get; set; }
+    public DateOnly? End_Date { get; set; }
+    
+    public BookById Book { get; set; } 
+}
+
 public class GraphQLRoot { public GraphQLResponse? Data { get; set; } = new(); }

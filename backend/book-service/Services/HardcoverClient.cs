@@ -30,7 +30,7 @@ public class HardcoverClient
         };
 
         var response = await _http.PostAsJsonAsync("", query);
-                // var rawJson = await response.Content.ReadAsStringAsync();
+        // var rawJson = await response.Content.ReadAsStringAsync();
         // Console.WriteLine($"DEBUG: Odpowiedź z API: {rawJson}");
         var result = await response.Content.ReadFromJsonAsync<GraphQLRoot>();
         return result?.Data?.Editions ?? new List<BookById>();

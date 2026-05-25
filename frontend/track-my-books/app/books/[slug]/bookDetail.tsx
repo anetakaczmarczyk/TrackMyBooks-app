@@ -63,12 +63,12 @@ export default function BookDetail({ bookbyId, reviews }: { bookbyId: BookByIdRe
     if (user && !authLoading) {
       const fetchStatus = async () => {
         try {
-          const response = await fetch(`http://localhost:5000/api/booksdb/readingStatus/${bookbyId.book.default_Physical_Edition_Id}?username=${user.username}`);
+          const response = await fetch(`http://localhost:5000/api/books/readingStatus/${bookbyId.book.default_Physical_Edition_Id}?username=${user.username}`);
           if (response.ok) {
             const data = await response.json();
-            setPendingStatus(data[0].status);
-            setSavedStatus(data[0].status);
-            setProgress(data[0].progress);
+            setPendingStatus(data[0]?.status || null);
+            setSavedStatus(data[0]?.status || null);
+            setProgress(data[0]?.progress);
           }
         } catch (error) {
           console.error("Error fetching reading status:", error);
@@ -98,7 +98,7 @@ export default function BookDetail({ bookbyId, reviews }: { bookbyId: BookByIdRe
     let progress = 0;
     if (pendingStatus === "read") progress = bookbyId.book.pages;
     try {
-      await fetch("http://localhost:5000/api/booksdb/addToReadingStatus", {
+      await fetch("http://localhost:5000/api/books/addToReadingStatus", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
