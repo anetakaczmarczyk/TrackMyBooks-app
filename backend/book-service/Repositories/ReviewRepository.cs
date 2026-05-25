@@ -26,4 +26,11 @@ public class ReviewRepository
         await connection.ExecuteAsync(query, new { review.Rating, review.Review_Text, Id = id });
     }
 
+    public async Task<IEnumerable<Review>> GetReviewsByUsername(string username)
+    {
+        using var connection = _db.CreateConnection();
+        var query = "SELECT * FROM Reviews WHERE Username = @Username ORDER BY Timestamp DESC LIMIT 10";
+        return await connection.QueryAsync<Review>(query, new { Username = username });
+    }
+
 }

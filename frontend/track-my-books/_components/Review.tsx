@@ -1,3 +1,4 @@
+import {BookByIdResponse} from "@/_components/bookInterface";
 export interface Review {
     id: number;
     book_Id: number;
@@ -5,4 +6,5 @@ export interface Review {
     rating: number;
     review_Text: string;
     timestamp: string;
+    cached_Book?: BookByIdResponse; 
 }

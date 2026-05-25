@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using book_service.Services;
+using book_service.Models;
 using System.Text;
 
 [ApiController]
@@ -11,10 +13,16 @@ using System.Text;
 public class UserController : ControllerBase
 {
     private readonly UserRepository _userRepository;
+    private readonly BooksdbRepository _booksdbRepository;
+    private readonly ReviewRepository _reviewRepository;
+    private readonly HardcoverClient _client;
 
-    public UserController(UserRepository userRepository)
+    public UserController(UserRepository userRepository, BooksdbRepository booksdbRepository, ReviewRepository reviewRepository, HardcoverClient client)
     {
         _userRepository = userRepository;
+        _booksdbRepository = booksdbRepository;
+        _reviewRepository = reviewRepository;
+        _client = client;
     }
 
     private string GenerateJwtToken(User user)
@@ -154,6 +162,45 @@ public class UserController : ControllerBase
         await _userRepository.DeleteUser(request);
         Logout();
         return Ok("Account deleted!");
+    }
+
+    [HttpGet("{username}")]
+    public async Task<IActionResult> GetUserByUsername([FromRoute] string username)
+    {
+        Console.WriteLine($"Fetching profile for username: {username}");
+        var user = await _userRepository.GetUserByUsername(username);
+        if (user == null)
+        {
+            return NotFound();
+        }
+        var reviews = await _reviewRepository.GetReviewsByUsername(username);
+        foreach (var review in reviews)
+        {
+            var bookData = await _client.GetBookById(review.Book_Id);
+            if (bookData != null && bookData.Count > 0)            {
+                review.Cached_Book = bookData[0];
+            }
+        }
+        var recentActivity = await _booksdbRepository.GetRecentActivityByUsername(username);
+        var userReadingStatuses = await _booksdbRepository.GetUserReadingStatuses(username);
+        var libraryItems = new List<UserLibraryItemDto>();
+        foreach (var status in userReadingStatuses)
+        {
+            var bookData = await _client.GetBookById(status.Book_Id);
+            if (bookData != null && bookData.Count > 0)
+            {
+                libraryItems.Add(new UserLibraryItemDto
+                {
+                    Status = status.Status,
+                    Progress = status.Progress,
+                    Start_Date = status.Start_Date,
+                    End_Date = status.End_Date,
+                    Book = bookData[0]
+                });
+            }
+        }
+
+        return Ok(new { user, reviews, recentActivity, libraryItems });
     }
 
 }

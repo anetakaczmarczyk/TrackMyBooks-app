@@ -206,7 +206,7 @@ export default function SettingsPage() {
                 <h2 className="settings-panel-title">Account Information</h2>
 
                 <div className="settings-avatar-row">
-                  <div className="settings-avatar">{user?.name?.split(" ").map(n => n[0]).join("") || "U"}</div>
+                  <div className="settings-avatar">{user?.name.split(" ").map(n => n.charAt(0).toUpperCase()).join("").slice(0, 2) || "U"}</div>
                 </div>
 
                 <div className="settings-fields-grid">

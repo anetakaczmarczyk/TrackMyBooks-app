@@ -37,3 +37,12 @@ public class DeleteAccountRequest
     public string Password { get; set; } = string.Empty;
     public string Confirmation { get; set; } = string.Empty;
 }
+
+public class UserActivity
+{
+    public int Id { get; set; }
+    public string Username { get; set; } = string.Empty;
+    public string Book_Title { get; set; } = string.Empty;
+    public string Activity_Type { get; set; } = string.Empty;
+    public DateTime Timestamp { get; set; }
+}

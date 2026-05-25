@@ -124,4 +124,11 @@ public class BooksdbRepository
         var query = "INSERT INTO UserActivity (username, book_title, activity_type) VALUES (@Username, @BookTitle, @ActivityType)";
         await connection.ExecuteAsync(query, new { Username = username, BookTitle = bookTitle, ActivityType = activity });
     }
+
+    public async Task<IEnumerable<UserActivity>> GetRecentActivityByUsername(string username)
+    {
+        using var connection = _db.CreateConnection();
+        var query = "SELECT * FROM UserActivity WHERE username = @Username ORDER BY timestamp DESC LIMIT 10";
+        return await connection.QueryAsync<UserActivity>(query, new { Username = username });
+    }
 }

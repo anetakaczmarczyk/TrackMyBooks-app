@@ -53,4 +53,11 @@ public class UserRepository
         var query = "DELETE FROM Users WHERE email = @Email";
         await connection.ExecuteAsync(query, new { Email = request.Email });
     }
+
+    public async Task<User> GetUserByUsername(string username)
+    {
+        using var connection = _db.CreateConnection();
+        var query = "SELECT * FROM Users WHERE username = @Username";
+        return await connection.QuerySingleOrDefaultAsync<User>(query, new { Username = username });
+    }
 }
