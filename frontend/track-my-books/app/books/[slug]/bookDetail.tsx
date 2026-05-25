@@ -105,7 +105,8 @@ export default function BookDetail({ bookbyId, reviews }: { bookbyId: BookByIdRe
           book_Id: bookbyId.book.default_Physical_Edition_Id,
           username: user?.username,
           status: pendingStatus || "",
-          progress
+          progress,
+          book_Title: bookbyId.book.title,
         }),
       });
       setSavedStatus(pendingStatus);
@@ -126,6 +127,7 @@ export default function BookDetail({ bookbyId, reviews }: { bookbyId: BookByIdRe
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           book_Id: bookbyId.book.default_Physical_Edition_Id,
+          book_Title: bookbyId.book.title,
           username: user.username,
           rating: userRating,
           review_Text: reviewText,
@@ -143,7 +145,7 @@ export default function BookDetail({ bookbyId, reviews }: { bookbyId: BookByIdRe
       const response = await fetch(`http://localhost:5000/api/reviews/update/${userReview.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rating: userRating, review_Text: reviewText }),
+        body: JSON.stringify({ rating: userRating, review_Text: reviewText, username: user.username, book_Title: bookbyId.book.title, book_Id: bookbyId.book.default_Physical_Edition_Id }),
       });
       if (response.ok) router.refresh();
     } catch (e) {

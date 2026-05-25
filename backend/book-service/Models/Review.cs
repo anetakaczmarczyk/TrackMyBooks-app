@@ -5,5 +5,6 @@ public class Review
     public string Username { get; set; } = string.Empty;
     public int Rating { get; set; }
     public string Review_Text { get; set; } = string.Empty;
+    public string Book_Title { get; set; } = string.Empty;
     public DateTime Timestamp { get; set; }
 }

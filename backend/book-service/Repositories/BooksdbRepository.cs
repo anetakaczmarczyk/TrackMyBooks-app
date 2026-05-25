@@ -43,7 +43,6 @@ public class BooksdbRepository
     {
         using var connection = _db.CreateConnection();
         var query = string.Empty;
-        Console.WriteLine($"Updating reading status for user: {username}, bookId: {bookId}, status: {status}, progress: {progress}");
         if (status == "reading")
         {
             query = "UPDATE ReadingStatus SET status = @Status, start_date = CURRENT_DATE, end_date = NULL, progress = @Progress WHERE username = @Username AND book_id = @BookId";
@@ -76,5 +75,53 @@ public class BooksdbRepository
         using var connection = _db.CreateConnection();
         var query = "SELECT * FROM ReadingStatus WHERE username = @Username";
         return await connection.QueryAsync<ReadingStatus>(query, new {Username = username });
+    }
+
+    public async Task AddToActivity(string username, string bookTitle, string status)
+    {
+        using var connection = _db.CreateConnection();
+        var activity = string.Empty;
+        if (status == "reading")
+        {
+            activity = "started reading";
+        }
+        else if (status == "read")
+        {
+            activity = "finished reading";
+        }
+        else if (status == "abandoned")
+        {
+            activity = "abandoned";
+        }
+        else if (status == "wishlist")
+        {
+            activity = "added to wishlist";
+        }
+        else if (status == "rated")
+        {
+            activity = "rated";
+        }
+        else if (status == "reviewed")
+        {
+            activity = "wrote a review for";
+        }
+        else if (status == "removed")
+        {
+            activity = "removed from list";
+        }
+        else if (status == "updated rating")
+        {
+            activity = "updated rating for";
+        }
+        else if (status == "updated review")
+        {
+            activity = "updated review for";
+        }
+        else
+        {
+            activity = "updated status of";
+        }
+        var query = "INSERT INTO UserActivity (username, book_title, activity_type) VALUES (@Username, @BookTitle, @ActivityType)";
+        await connection.ExecuteAsync(query, new { Username = username, BookTitle = bookTitle, ActivityType = activity });
     }
 }

@@ -15,4 +15,5 @@ public class AddToReadingStatusRequest
     public int Book_Id { get; set; }
     public string Status { get; set; } = string.Empty;
     public int Progress { get; set; } = 0;
+    public string Book_Title { get; set; } = string.Empty;
 }

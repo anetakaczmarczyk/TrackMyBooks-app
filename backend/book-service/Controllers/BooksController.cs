@@ -78,6 +78,7 @@ public class BooksController : ControllerBase
         {
             var userLists = await _booksdbRepository.GetUserReadingStatus(request.Username);
             var existingEntry = userLists.FirstOrDefault(l => l.Book_Id == request.Book_Id);
+            await _booksdbRepository.AddToActivity(request.Username, request.Book_Title, request.Status);
             if (existingEntry != null)
             {
                 await _booksdbRepository.UpdateReadingStatus(request.Username, request.Book_Id, request.Status, request.Progress);
@@ -92,6 +93,7 @@ public class BooksController : ControllerBase
         else
         {
             await _booksdbRepository.RemoveBookFromReadingStatus(request.Username, request.Book_Id);
+            await _booksdbRepository.AddToActivity(request.Username, request.Book_Title, "removed");
         }
 
         return Ok("Book added to list!");
