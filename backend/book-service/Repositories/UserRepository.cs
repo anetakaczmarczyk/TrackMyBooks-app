@@ -1,5 +1,5 @@
 using Dapper;
-
+using book_service.Models;
 public class UserRepository
 {
     private readonly DbConnectionFactory _db;
@@ -59,5 +59,159 @@ public class UserRepository
         using var connection = _db.CreateConnection();
         var query = "SELECT * FROM Users WHERE username = @Username";
         return await connection.QuerySingleOrDefaultAsync<User>(query, new { Username = username });
+    }
+    
+public async Task<IEnumerable<FriendWithBooksDto>> GetFriendsData(string username)
+{
+    using var connection = _db.CreateConnection();
+
+    // 1. Pobieranie znajomych i ich statusów (Z DODANYM ROZRÓŻNIENIEM USER1/USER2)
+    var friendsQuery = @"
+        SELECT 
+            f.status AS FriendshipStatus,
+            u.username AS FriendUsername,
+            u.name AS FriendName,
+            -- ── TUTAJ SPRAWDZAMY KTO JEST KIM ──
+            CASE WHEN f.user1 = @Username THEN true ELSE false END AS IsInitiator,
+            rs.id AS StatusId,
+            rs.book_id AS BookId,
+            rs.status AS ReadingStatus,
+            rs.progress AS Progress,
+            rs.start_date AS StartDate,
+            rs.end_date AS EndDate
+        FROM Friendships f
+        JOIN Users u ON (f.user1 = u.username OR f.user2 = u.username)
+        LEFT JOIN ReadingStatus rs ON u.username = rs.username
+        WHERE (f.user1 = @Username OR f.user2 = @Username) 
+          AND u.username != @Username";
+
+    var activityQuery = @"
+        SELECT 
+            ua.username AS Username,
+            ua.activity_type AS ActivityType,
+            ua.book_title AS BookTitle,
+            ua.timestamp AS Timestamp
+        FROM Friendships f
+        JOIN Users u ON (f.user1 = u.username OR f.user2 = u.username)
+        JOIN UserActivity ua ON u.username = ua.username
+        WHERE (f.user1 = @Username OR f.user2 = @Username) 
+          AND u.username != @Username";
+
+    var reviewQuery = @"
+        SELECT 
+            r.username AS Username,
+            r.id AS Id,
+            r.book_id AS BookId,
+            r.rating AS Rating,
+            r.review_text AS ReviewText,
+            '' AS BookTitle,
+            r.timestamp AS Timestamp
+        FROM Friendships f
+        JOIN Users u ON (f.user1 = u.username OR f.user2 = u.username)
+        JOIN Reviews r ON u.username = r.username
+        WHERE (f.user1 = @Username OR f.user2 = @Username) 
+          AND u.username != @Username";
+
+    var friendRows = await connection.QueryAsync<RawFriendshipRow>(friendsQuery, new { Username = username });
+    var activityRows = await connection.QueryAsync<RawActivityRow>(activityQuery, new { Username = username });
+    var reviewRows = await connection.QueryAsync<RawReviewRow>(reviewQuery, new { Username = username });
+
+    var activitiesLookup = activityRows
+        .GroupBy(a => a.Username)
+        .ToDictionary(g => g.Key, g => g.ToList());
+
+    var reviewsLookup = reviewRows
+        .GroupBy(r => r.Username)
+        .ToDictionary(g => g.Key, g => g.ToList());
+
+    var result = friendRows
+        .GroupBy(r => new { r.FriendUsername, r.FriendName, r.FriendshipStatus, r.IsInitiator }) // ◄ Dodano IsInitiator do grupowania
+        .Select(g => new FriendWithBooksDto
+        {
+            Username = g.Key.FriendUsername,
+            Name = g.Key.FriendName,
+            FriendshipStatus = g.Key.FriendshipStatus,
+            IsInitiator = g.Key.IsInitiator, // ◄ Przypisujemy do końcowego DTO
+            
+            ReadingStatuses = g
+                .Where(r => r.StatusId != null) 
+                .Select(r => new FriendReadingStatusDto
+                {
+                    Id = r.StatusId!.Value,         
+                    Book_Id = r.BookId!.Value,       
+                    Status = r.ReadingStatus ?? string.Empty,
+                    Progress = r.Progress ?? 0,
+                    Start_Date = r.StartDate,
+                    End_Date = r.EndDate
+                }).ToList(),
+
+            Activities = activitiesLookup.ContainsKey(g.Key.FriendUsername)
+                ? activitiesLookup[g.Key.FriendUsername].Select(a => new FriendActivityDto
+                  {
+                      ActivityType = a.ActivityType,
+                      BookTitle = a.BookTitle,
+                      Timestamp = a.Timestamp
+                  }).ToList()
+                : new List<FriendActivityDto>(),
+
+            Reviews = reviewsLookup.ContainsKey(g.Key.FriendUsername)
+                ? reviewsLookup[g.Key.FriendUsername].Select(r => new FriendReviewDto
+                  {
+                      Id = r.Id,
+                      Book_Id = r.BookId,
+                      Rating = r.Rating,
+                      Review_Text = r.ReviewText,
+                      Book_Title = r.BookTitle,
+                      Timestamp = r.Timestamp
+                  }).ToList()
+                : new List<FriendReviewDto>()
+        })
+        .ToList();
+
+    return result;
+}
+
+    public async Task RespondToInvitation(RespondToInvitationRequest request)
+    {
+        using var connection = _db.CreateConnection();
+        string query;
+        if (request.Accept)
+        {
+            query = @"
+                UPDATE Friendships 
+                SET status = 'accepted' 
+                WHERE (user1 = @UserUsername AND user2 = @FriendUsername) 
+                   OR (user1 = @FriendUsername AND user2 = @UserUsername)";
+        }
+        else
+        {
+            query = @"
+                DELETE FROM Friendships 
+                WHERE (user1 = @UserUsername AND user2 = @FriendUsername) 
+                   OR (user1 = @FriendUsername AND user2 = @UserUsername)";
+        }
+        await connection.ExecuteAsync(query, new { UserUsername = request.UserUsername, FriendUsername = request.FriendUsername });
+
+        await GetFriendsData(request.UserUsername);
+    }
+
+    public async Task RemoveFriend(SendInvitationRequest request)
+    {
+        using var connection = _db.CreateConnection();
+        var query = @"
+            DELETE FROM Friendships 
+            WHERE (user1 = @UserUsername AND user2 = @FriendUsername) 
+               OR (user1 = @FriendUsername AND user2 = @UserUsername)";
+        await connection.ExecuteAsync(query, new { UserUsername = request.UserUsername, FriendUsername = request.FriendUsername });
+
+        await GetFriendsData(request.UserUsername);
+    }
+
+    public async Task SendInvitation(SendInvitationRequest request)
+    {
+
+        using var connection = _db.CreateConnection();
+        var query = "INSERT INTO Friendships (user1, user2) VALUES (@UserUsername, @FriendUsername)";
+        await connection.ExecuteAsync(query, new { UserUsername = request.UserUsername, FriendUsername = request.FriendUsername });
     }
 }

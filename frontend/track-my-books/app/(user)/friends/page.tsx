@@ -1,8 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {Navbar} from "@/_components/Navbar";
 import { Footer } from "@/_components/Footer";
+import { ToastContainer } from "@/_components/Toast";
+import { FriendsData } from "@/_components/Friends";
+import { useToast } from "@/_hooks/useToast";
+import { useAuth } from "@/_context/AuthContext";
+import { useRouter } from "next/navigation";
 
 const MY_FRIENDS = [
   { id: 1,  name: "Marta Kowalska",   handle: "@marta.czyta",    avatar: "MK", books: 34, mutual: 5,  online: true  },
@@ -31,25 +36,140 @@ const ACTIVITY = [
   { avatar: "AS", name: "Anna S.",   action: 'started reading',   title: "Sea of Tranquility", time: "4 days ago"   },
 ];
 
-const TABS = ["My friends", "Invitations", "Suggestions", "Friends' Activity"];
+const TABS = ["My friends", "Invitations", "Pending", "Friends' Activity"];
+
 
 export default function FriendsPage() {
+  const { user, loading: authLoading, refreshUser } = useAuth();
+  const router = useRouter();
+  const { toasts, addToast, removeToast } = useToast();
+
   const [tab, setTab]         = useState("My friends");
   const [query, setQuery]     = useState("");
   const [sent, setSent]       = useState<number[]>([]);
   const [accepted, setAccepted] = useState<number[]>([]);
   const [declined, setDeclined] = useState<number[]>([]);
+  const [friendsData, setFriendsData] = useState<FriendsData[]>([]);
+
+  const [numberOfInvites, setNumberOfInvites] = useState(0);
+
+  useEffect(() => {
+    if (!authLoading && !user) router.push("/");
+  }, [user, authLoading, router]);
+
+  useEffect(() => {
+    setNumberOfInvites(friendsData.filter(f => f.friendshipStatus === "pending").length);
+
+  }, [friendsData]);
+
+  useEffect(() => {
+    const getFriendsData = async () => {
+      const res = await fetch("http://localhost:5000/api/user/getFriendsData", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json"},
+        credentials: "include"
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setFriendsData(data);
+      } else {
+        console.error("Failed to fetch friends data");
+      }
+    }
+    getFriendsData();
+  }, [user]);
+
+  const sendInvitation = async() => {
+    if (!query) {
+      addToast("Please enter a username", "warning");
+      return;
+    }
+    else if (query === user?.username) {
+      addToast("You cannot invite yourself", "error");
+      return;
+    }
+    const response = await fetch("http://localhost:5000/api/user/sendInvitation", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      credentials: "include",
+      body: JSON.stringify({ userUsername: user?.username, friendUsername: query })
+    });
+    if (response.ok) {
+      addToast("Invitation sent!", "success");
+      setQuery("");
+      await refreshUser?.();
+    } else {
+      const message = await response.text();
+      addToast(`Failed to send invitation: ${message}`, "error");
+    }
+  };
+
+  const respondToInvitation = async (friendUsername: string, accept: boolean) => {
+    const response = await fetch("http://localhost:5000/api/user/respondToInvitation", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      credentials: "include",
+      body: JSON.stringify({ userUsername: user?.username, friendUsername, accept })
+    });
+    if (response.ok) {
+      addToast(`Invitation ${accept ? "accepted" : "declined"}!`, "success");
+      await refreshUser?.();
+    } else {
+      const message = await response.text();
+      addToast(`Failed to answer invitation: ${message}`, "error");
+    }
+  };
+
+  const removeFriend = async (friendUsername: string) => {
+    const response = await fetch("http://localhost:5000/api/user/removeFriend", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      credentials: "include",
+      body: JSON.stringify({ userUsername: user?.username, friendUsername })
+    });
+    if (response.ok) {
+      addToast("Friend removed!", "success");
+      await refreshUser?.();
+    } else {
+      const message = await response.text();
+      addToast(`Failed to remove friend: ${message}`, "error");
+    }
+  };
+
+    function formatTimeAgo(timestamp: string | Date) {
+      const ms = Date.now() - new Date(timestamp+"Z").getTime();
+      const seconds = Math.floor(ms / 1000);
+      
+      if (seconds < 60) return `${seconds} s ago`;
+      
+      const minutes = Math.floor(seconds / 60);
+      if (minutes < 60) return `${minutes} min ago`;
+      
+      const hours = Math.floor(minutes / 60);
+      if (hours < 24) return `${hours} h ago`;
+      
+      const days = Math.floor(hours / 24);
+      return `${days} days ago`;
+  }
 
   return (
     <>
       <Navbar />
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
       <div className="inner-page">
 
         <div className="page-header">
           <div>
             <div className="page-eyebrow"><span className="eyebrow-line" />Community<span className="eyebrow-line" /></div>
             <h1 className="page-title">Friends</h1>
-            <p className="page-subtitle">{MY_FRIENDS.length} friends · {REQUESTS.length} invitations</p>
+            <p className="page-subtitle">{friendsData.filter(f => f.friendshipStatus === "accepted").length} friends · {friendsData.filter(f => f.friendshipStatus === "pending" && !f.isInitiator).length} invitations</p>
           </div>
           <div className="search-wrap">
             <span className="search-icon">🔍</span>
@@ -58,6 +178,7 @@ export default function FriendsPage() {
               placeholder="Search user…"
               value={query}
               onChange={e => setQuery(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter") sendInvitation() }}
             />
           </div>
         </div>
@@ -70,8 +191,8 @@ export default function FriendsPage() {
               onClick={() => setTab(t)}
             >
               {t}
-              {t === "Invitations" && REQUESTS.length > 0 && (
-                <span className="friends-notif-badge">{REQUESTS.length}</span>
+              {t === "Invitations" && friendsData.filter(f => f.friendshipStatus === "pending" && !f.isInitiator).length > 0 && (
+                <span className="friends-notif-badge">{friendsData.filter(f => f.friendshipStatus === "pending" && !f.isInitiator).length}</span>
               )}
             </button>
           ))}
@@ -79,33 +200,31 @@ export default function FriendsPage() {
 
         {tab === "My friends" && (
           <div className="friends-big-grid">
-            {MY_FRIENDS
-              .filter(f => !query || f.name.toLowerCase().includes(query.toLowerCase()))
+            {friendsData.filter(f => f.friendshipStatus === "accepted")
               .map(f => (
-              <div className="friend-big-card" key={f.id}>
+              <div className="friend-big-card" key={f.username}>
                 <div className="fbc-top">
                   <div className="fbc-avatar-wrap">
-                    <div className="fbc-avatar">{f.avatar}</div>
-                    {f.online && <span className="fbc-online" />}
+                    <div className="fbc-avatar">{f.name.split(" ").map(n => n.charAt(0).toUpperCase()).join("").slice(0, 2)}</div>
                   </div>
                   <div className="fbc-info">
                     <div className="fbc-name">{f.name}</div>
-                    <div className="fbc-handle">{f.handle}</div>
+                    <div className="fbc-handle">{f.username}</div>
                   </div>
                 </div>
                 <div className="fbc-stats">
                   <div className="fbc-stat">
-                    <span className="fbc-stat-val">{f.books}</span>
+                    <span className="fbc-stat-val">{f.readingStatuses.filter(s => s.status === "read").length}</span>
                     <span className="fbc-stat-lbl">books</span>
                   </div>
                   <div className="fbc-stat">
-                    <span className="fbc-stat-val">{f.mutual}</span>
-                    <span className="fbc-stat-lbl">mutual</span>
+                    <span className="fbc-stat-val">{f.reviews.length}</span>
+                    <span className="fbc-stat-lbl">reviews</span>
                   </div>
                 </div>
                 <div className="fbc-actions">
-                  <a href="#" className="fbc-btn-ghost">View Profile</a>
-                  <button className="fbc-btn-remove">Remove</button>
+                  <a href={`/profile/${f.username}`} className="fbc-btn-ghost">View Profile</a>
+                  <button className="fbc-btn-remove" onClick={() => removeFriend(f.username)}>Remove</button>
                 </div>
               </div>
             ))}
@@ -114,22 +233,22 @@ export default function FriendsPage() {
 
         {tab === "Invitations" && (
           <div style={{ maxWidth: 560 }}>
-            {REQUESTS.filter(r => !accepted.includes(r.id) && !declined.includes(r.id)).length === 0 ? (
+            {(friendsData.filter(f => f.friendshipStatus === "pending" && !f.isInitiator).length === 0 ) ? (
               <div className="friends-empty">
                 <span className="friends-empty-icon">📬</span>
                 <p>No new invitations</p>
               </div>
             ) : (
-              REQUESTS.filter(r => !accepted.includes(r.id) && !declined.includes(r.id)).map(r => (
-                <div className="request-row" key={r.id}>
-                  <div className="fbc-avatar" style={{ width: 48, height: 48, fontSize: 15 }}>{r.avatar}</div>
+              friendsData.filter(f => f.friendshipStatus === "pending" && !f.isInitiator).map(f => (
+                <div className="request-row" key={f.username}>
+                  <div className="fbc-avatar" style={{ width: 48, height: 48, fontSize: 15 }}>{f.name.split(" ").map(n => n.charAt(0).toUpperCase()).join("").slice(0, 2)}</div>
                   <div style={{ flex: 1 }}>
-                    <div className="fbc-name">{r.name}</div>
-                    <div className="fbc-handle">{r.handle} · {r.mutual} mutual friends</div>
+                    <div className="fbc-name">{f.name}</div>
+                    <div className="fbc-handle">{f.username} · {f.reviews.length} reviews</div>
                   </div>
                   <div style={{ display: "flex", gap: 8 }}>
-                    <button className="btn-gold" style={{ padding: "7px 18px", fontSize: 13 }} onClick={() => setAccepted(p => [...p, r.id])}>Accept</button>
-                    <button className="fbc-btn-remove" onClick={() => setDeclined(p => [...p, r.id])}>Decline</button>
+                    <button className="btn-gold" style={{ padding: "7px 18px", fontSize: 13 }} onClick={() => respondToInvitation(f.username, true)}>Accept</button>
+                    <button className="fbc-btn-remove" onClick={() => respondToInvitation(f.username, false)}>Decline</button>
                   </div>
                 </div>
               ))
@@ -137,56 +256,67 @@ export default function FriendsPage() {
           </div>
         )}
 
-        {tab === "Suggestions" && (
+        {tab === "Pending" && (
           <div className="friends-big-grid">
-            {SUGGESTIONS.map(s => (
-              <div className="friend-big-card" key={s.id}>
+            {friendsData.filter(f => f.friendshipStatus === "pending" && f.isInitiator).map(f => (
+              <div className="friend-big-card" key={f.username}>
                 <div className="fbc-top">
                   <div className="fbc-avatar-wrap">
-                    <div className="fbc-avatar">{s.avatar}</div>
+                    <div className="fbc-avatar">{f.name.split(" ").map(n => n.charAt(0).toUpperCase()).join("").slice(0, 2)}</div>
                   </div>
                   <div className="fbc-info">
-                    <div className="fbc-name">{s.name}</div>
-                    <div className="fbc-handle">{s.handle}</div>
+                    <div className="fbc-name">{f.name}</div>
+                    <div className="fbc-handle">{f.username}</div>
                   </div>
                 </div>
-                <div className="fbc-reason">{s.reason}</div>
                 <div className="fbc-stats">
                   <div className="fbc-stat">
-                    <span className="fbc-stat-val">{s.books}</span>
+                    <span className="fbc-stat-val">{f.readingStatuses.filter(s => s.status === "read").length}</span>
                     <span className="fbc-stat-lbl">books</span>
                   </div>
                   <div className="fbc-stat">
-                    <span className="fbc-stat-val">{s.mutual}</span>
-                    <span className="fbc-stat-lbl">mutual</span>
+                    <span className="fbc-stat-val">{f.reviews.length}</span>
+                    <span className="fbc-stat-lbl">reviews</span>
                   </div>
                 </div>
                 <div className="fbc-actions">
-                  {sent.includes(s.id)
-                    ? <span className="fbc-sent-label">✓ Invitation sent</span>
-                    : <button className="btn-gold" style={{ padding: "8px 0", fontSize: 13, width: "100%" }} onClick={() => setSent(p => [...p, s.id])}>+ Invite</button>
-                  }
+                  <button className="btn-gold" style={{ padding: "8px 0", fontSize: 13, width: "100%" }} onClick={() => respondToInvitation(f.username, false)}>Cancel Invitation</button>
                 </div>
               </div>
             ))}
           </div>
         )}
 
-        {tab === "Friends' Activity" && (
-          <div className="friends-activity">
-            {ACTIVITY.map((a, i) => (
-              <div className="fbc-activity-row" key={i}>
-                <div className="fbc-activity-avatar">{a.avatar}</div>
-                <div className="fbc-activity-text">
-                  <span className="fbc-activity-name">{a.name}</span>
-                  {" "}<span className="fbc-activity-action">{a.action}</span>{" "}
-                  <em className="fbc-activity-book">„{a.title}"</em>
-                </div>
-                <span className="activity-time">{a.time}</span>
+    {tab === "Friends' Activity" && (
+      <div className="friends-activity">
+        {friendsData
+          .filter(f => f.friendshipStatus === "accepted")
+          .flatMap(f => {
+            return f.activities.map(a => ({
+              ...a,
+              friendName: f.name || f.username,
+              friendUsername: f.username
+            }));
+          })
+          .sort((b, c) => new Date(c.timestamp).getTime() - new Date(b.timestamp).getTime())
+          .slice(0, 10)
+          .map((a, i) => (
+            <div className="fbc-activity-row" key={i}>
+              <div className="fbc-activity-avatar">
+                {a.friendName.split(" ").map(n => n.charAt(0).toUpperCase()).join("").slice(0, 2)}
               </div>
-            ))}
-          </div>
-        )}
+              
+              <div className="fbc-activity-text">
+                <span className="fbc-activity-name">{a.friendUsername}</span>
+                {" "}<span className="fbc-activity-action">{a.activityType}</span>{" "}
+                <em className="fbc-activity-book">„{a.bookTitle}“</em>
+              </div>
+
+              <span className="activity-time">{formatTimeAgo(a.timestamp)}</span>
+            </div>
+          ))}
+      </div>
+    )}
 
       </div>
       <Footer />

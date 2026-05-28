@@ -66,7 +66,7 @@ export default function ProfilePage({
   }, [slug, user]);
 
   function formatTimeAgo(timestamp: string | Date) {
-    const ms = Date.now() - new Date(timestamp).getTime();
+    const ms = Date.now() - new Date(timestamp+"Z").getTime();
     const seconds = Math.floor(ms / 1000);
     
     if (seconds < 60) return `${seconds} s ago`;
@@ -149,6 +149,8 @@ export default function ProfilePage({
                 <div className="profile-books-row">
                   {readingStatuses
                   .filter(s => s.status === "read")
+                  .sort((a, b) => new Date(b.end_Date || "").getTime() - new Date(a.end_Date || "").getTime())
+                  .slice(0, 5)
                   .map(b => {
                     const book = b.book.book;
                     return (
@@ -169,8 +171,10 @@ export default function ProfilePage({
                   <div className="goal-track" style={{ marginTop: 12 }}>
                     <div className="goal-fill" style={{ width: `${Math.min(100, (readingStatuses.filter(s => s.status === "read").length / (userData?.books_Goal || 1)) * 100)}%` }} />
                   </div>
-                  <p className="goal-sub" style={{ marginTop: 8 }}>{Math.round((readingStatuses.filter(s => s.status === "read").length / (userData?.books_Goal || 1)) * 100)}% annual goal · {(userData?.books_Goal || 0) - readingStatuses.filter(s => s.status === "read").length} books remaining</p>
-                  <Link href="/statistics" className="goal-link">View full statistics →</Link>
+                  <p className="goal-sub" style={{ marginTop: 8 }}>{Math.round((readingStatuses.filter(s => s.status === "read").length / (userData?.books_Goal || 1)) * 100)}% annual goal · {(userData?.books_Goal || 0) - readingStatuses.filter(s => s.status === "read").length < 0 ? 0 : (userData?.books_Goal || 0) - readingStatuses.filter(s => s.status === "read").length} books remaining</p>
+                  {user?.username?.toLowerCase() === slug?.toLowerCase() && (
+                    <Link href="/statistics" className="goal-link">View full statistics →</Link>
+                  )}
                 </div>
               </div>
             </div>

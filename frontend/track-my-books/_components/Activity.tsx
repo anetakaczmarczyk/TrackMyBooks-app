@@ -3,3 +3,9 @@ export interface Activity {
     activity_Type: string;
     timestamp: string;
 }
+
+export interface FriendActivity {
+    activityType: string;
+    bookTitle: string;
+    timestamp: string;
+}

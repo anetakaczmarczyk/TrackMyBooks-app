@@ -164,6 +164,69 @@ public class UserController : ControllerBase
         return Ok("Account deleted!");
     }
 
+    [HttpGet("getFriendsData")]
+    public async Task<IActionResult> GetFriendsData()
+    {
+        var username = User.FindFirst(ClaimTypes.Name)?.Value;
+        if (string.IsNullOrEmpty(username))        {
+            return Unauthorized();
+        }
+        var friends = await _userRepository.GetFriendsData(username);
+        return Ok(friends);
+    }
+
+    [HttpPost("sendInvitation")]
+    public async Task<IActionResult> SendInvitation([FromBody] SendInvitationRequest request)
+    {
+        if (request.UserUsername == request.FriendUsername)
+        {
+            return BadRequest("You cannot send an invitation to yourself.");
+        }
+        if (await _userRepository.GetUserByUsername(request.FriendUsername) == null)
+        {
+            return NotFound("The user you are trying to invite does not exist.");
+        }
+        var friends = await _userRepository.GetFriendsData(request.UserUsername);
+        if (friends.Any(f => f.Username == request.FriendUsername))
+        {
+            return BadRequest("You are already friends with this user or have sent an invitation.");
+        }
+        await _userRepository.SendInvitation(request);
+        return Ok("Invitation sent!");
+    }
+
+    [HttpPost("respondToInvitation")]
+    public async Task<IActionResult> RespondToInvitation([FromBody] RespondToInvitationRequest request)
+    {
+        if (request.UserUsername == request.FriendUsername)
+        {
+            return BadRequest("Invalid operation.");
+        }
+        var friends = await _userRepository.GetFriendsData(request.UserUsername);
+        if (!friends.Any(f => f.Username == request.FriendUsername))
+        {
+            return BadRequest("No invitation found from this user.");
+        }
+        await _userRepository.RespondToInvitation(request);
+        return Ok("Invitation response recorded!");
+    }
+
+    [HttpPost("removeFriend")]
+    public async Task<IActionResult> RemoveFriend([FromBody] SendInvitationRequest request)
+    {
+        if (request.UserUsername == request.FriendUsername)
+        {
+            return BadRequest("Invalid operation.");
+        }
+        var friends = await _userRepository.GetFriendsData(request.UserUsername);
+        if (!friends.Any(f => f.Username == request.FriendUsername))
+        {
+            return BadRequest("This user is not in your friends list.");
+        }
+        await _userRepository.RemoveFriend(request);
+        return Ok("Friend removed!");
+    }
+
     [HttpGet("{username}")]
     public async Task<IActionResult> GetUserByUsername([FromRoute] string username)
     {
