@@ -28,6 +28,7 @@ async function fetchBooks(startNumber: number, itemsPerPage: number): Promise<Bo
     });
     if (!response.ok) return [];
     const data = await response.json();
+    console.log(data)
     return data
     .filter((b: any) => b.default_physical_edition_id)
     .map((book: any) =>({

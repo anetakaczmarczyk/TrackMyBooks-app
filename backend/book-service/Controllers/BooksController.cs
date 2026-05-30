@@ -41,6 +41,86 @@ public class BooksController : ControllerBase
         return Ok(data); 
     }
 
+    [HttpGet("getRecommendations")]
+    public async Task<IActionResult> GetRecommendations([FromQuery] string mood, [FromQuery] string? username)
+    {
+        var keywords = mood.ToLower() switch
+        {
+            "relax" => new List<string> { "romance", "humor", "comedy", "strength" },
+            "adventure" => new List<string> { "fantasy", "sci-fi", "science fiction", "adventure" },
+            "mind" => new List<string> { "science", "philosophy", "nonfiction" },
+            "emotion" => new List<string> { "drama", "biography", "memoir" },
+            "mystery" => new List<string> { "thriller", "mystery", "crime", "horror" },
+            "wonder" => new List<string> { "magical realism", "high fantasy" },
+            _ => new List<string> { "fiction" }
+        };
+
+        var allBooks = await _client.GetRecommendations(limit: 40);
+
+        string? activeUsername = null;
+
+        if (!string.IsNullOrWhiteSpace(username) && username.Trim().ToLower() != "null" && username.Trim().ToLower() != "undefined")
+        {
+            activeUsername = username.Trim();
+        }
+        else if (User.Identity != null && User.Identity.IsAuthenticated && !string.IsNullOrWhiteSpace(User.Identity.Name))
+        {
+            var tokenName = User.Identity.Name.Trim();
+            if (tokenName.ToLower() != "null" && tokenName.ToLower() != "undefined")
+            {
+                activeUsername = tokenName;
+            }
+        }
+
+        var userOwnedBookIds = new List<int>();
+
+        if (!string.IsNullOrEmpty(activeUsername))
+        {
+            var readingStatuses = await _booksdbRepository.GetUserReadingStatus(activeUsername);
+            
+            userOwnedBookIds = readingStatuses
+                .Select(rs => rs.Book_Id) 
+                .ToList();
+        }
+
+        var response = allBooks
+            .Where(b => b.Id.HasValue) 
+            .Where(b => !userOwnedBookIds.Contains(b.Id.Value)) 
+            .Select(b => 
+            {
+                var matchedTag = b.Cached_Tags?
+                    .SelectMany(pair => pair.Value) 
+                    .FirstOrDefault(t => t != null && !string.IsNullOrEmpty(t.Tag) && keywords.Contains(t.Tag.ToLower())); 
+
+                string primaryGenre = matchedTag != null 
+                    ? matchedTag.Tag 
+                    : (b.Cached_Tags?.FirstOrDefault().Value?.FirstOrDefault()?.Tag ?? keywords.FirstOrDefault() ?? "Fiction");
+
+                return new { Book = b, PrimaryGenre = primaryGenre, IsMatch = matchedTag != null };
+            })
+            .OrderByDescending(x => x.IsMatch) 
+            .Take(10) 
+            .Select(x => 
+            {
+                string reasonText = string.IsNullOrEmpty(activeUsername)
+                    ? $"\"If you love the vibe of {x.PrimaryGenre} – this highly-rated pick from the {mood} section is an absolute must-read!\""
+                    : $"\"Based on your interest in {x.PrimaryGenre} – you are looking for a story with a deeper atmosphere and tension.\"";
+
+                return new RecommendationDto
+                {
+                    Book_Id = x.Book.Id.Value,
+                    Title = x.Book.Title,
+                    AuthorName = x.Book.Contributions?.FirstOrDefault()?.Author?.Name ?? "Unknown Author",
+                    ImageUrl = x.Book.Cached_Image?.Url ?? "",
+                    Rating = x.Book.Rating,
+                    PrimaryGenre = x.PrimaryGenre.ToUpper(),
+                    Reason = reasonText
+                };
+            }).ToList();
+
+        return Ok(response);
+    }
+
     [HttpGet("readingStatus/{book_Id}")]
     public async Task<IActionResult> GetUserReadingStatus([FromRoute] int book_Id, [FromQuery] string username)
     {

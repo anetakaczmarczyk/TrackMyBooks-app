@@ -85,7 +85,6 @@ export default function BookDetail({ bookbyId, reviews }: { bookbyId: BookByIdRe
     }
   }, [userReview]);
 
-  const progressPct = bookbyId ? Math.round((progress / bookbyId.book.pages) * 100) : 0;
 
 
   // ── Handlers statusu ──
@@ -173,7 +172,7 @@ export default function BookDetail({ bookbyId, reviews }: { bookbyId: BookByIdRe
             <div className="bdh-series">{bookbyId.book.book_Series[0]?.series.name}</div>
             <h1 className="bdh-title">{bookbyId.book.title}</h1>
             {bookbyId.book.description && <p className="bdh-subtitle">{bookbyId.book.description}</p>}
-            <a href="#" className="bdh-author">{bookbyId.contributions?.[0]?.author.name || "Unknown Author"}</a>
+            <span className="bdh-author">{bookbyId.contributions?.[0]?.author.name || "Unknown Author"}</span>
 
             <div className="bdh-rating-row">
               <span className="bdh-ratings-count">Hardcover rating:</span>
@@ -280,7 +279,6 @@ export default function BookDetail({ bookbyId, reviews }: { bookbyId: BookByIdRe
                 <div>
                   <div className="bd-author-name">{bookbyId.contributions?.[0]?.author?.name || "Unknown author"}</div>
                   <p className="bd-author-bio">{bookbyId.contributions?.[0]?.author?.bio}</p>
-                  <a href="#" className="bd-author-link">Show all books →</a>
                 </div>
               </div>
             </div>

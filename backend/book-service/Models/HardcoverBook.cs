@@ -109,4 +109,15 @@ public class UserLibraryItemDto
     public BookById Book { get; set; } 
 }
 
+public class RecommendationDto
+{
+    public int? Book_Id { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string AuthorName { get; set; } = string.Empty;
+    public string ImageUrl { get; set; } = string.Empty;
+    public double Rating { get; set; }
+    public string PrimaryGenre { get; set; } = string.Empty;
+    public string Reason { get; set; } = string.Empty;
+}
+
 public class GraphQLRoot { public GraphQLResponse? Data { get; set; } = new(); }

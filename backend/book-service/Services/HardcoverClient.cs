@@ -35,4 +35,16 @@ public class HardcoverClient
         var result = await response.Content.ReadFromJsonAsync<GraphQLRoot>();
         return result?.Data?.Editions ?? new List<BookById>();
     }
+
+public async Task<List<HardcoverBook>> GetRecommendations(int limit = 40)
+{
+    var query = new { 
+        query = "query GetRecommendations($limit: Int!) { books(order_by: {rating: desc}, limit: $limit, where: {ratings_count: {_gt: 5} }) { default_physical_edition_id release_date cached_image title description cached_tags contributions {author {name}} rating pages ratings_count}}",
+        variables = new { limit }
+    };
+
+    var response = await _http.PostAsJsonAsync("", query);
+    var result = await response.Content.ReadFromJsonAsync<GraphQLRoot>();
+    return result?.Data?.Books ?? new List<HardcoverBook>();
+}
 }
