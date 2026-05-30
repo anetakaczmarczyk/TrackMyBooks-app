@@ -149,6 +149,19 @@ export default function ReadingPage({
             console.error("Failed to put session data");
             return;
         }
+
+      const response = await fetch(`http://localhost:5000/api/books/updateProgress`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        credentials: "include",
+        body: JSON.stringify({ book_Id: slug, username: user?.username, progress: finishPage, isFinished: finishPage >= (bookData?.book.pages || 1)})
+    });
+        if (!response.ok) {
+            console.error("Failed to save data");
+            return;
+        }
         refreshUser?.()
     }
     setTimerSeconds(0);
@@ -177,7 +190,7 @@ export default function ReadingPage({
         credentials: "include",
         body: JSON.stringify({ book_Id: slug, username: user?.username, progress: finishPage, isFinished: finishPage >= (bookData?.book.pages || 1)})
     });
-        if (!res.ok) {
+        if (!response.ok) {
             console.error("Failed to save data");
             return;
         }
