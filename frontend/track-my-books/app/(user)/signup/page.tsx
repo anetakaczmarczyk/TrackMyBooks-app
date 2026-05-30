@@ -157,13 +157,6 @@ export default function RegisterPage() {
                   <p>Curated titles tailored to your reading preferences.</p>
                 </div>
               </div>
-              <div className="perk-item">
-                <div className="perk-icon-wrap">📊</div>
-                <div className="perk-text">
-                  <h3>Summaries</h3>
-                  <p>Your reading statistics and achievements.</p>
-                </div>
-              </div>
             </div>
           </div>
         </div>

@@ -59,9 +59,6 @@ export default function LibraryPage() {
     fetchLibrary();
   }, [user]);
 
-  useEffect(() => {
-    console.log(books);
-  }, [books]);
 
   if (authLoading || !user || loadingData) {
     return (

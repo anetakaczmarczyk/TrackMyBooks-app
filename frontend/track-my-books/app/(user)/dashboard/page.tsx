@@ -6,6 +6,9 @@ import { useRouter } from "next/navigation";
 import { Navbar } from "@/_components/Navbar";
 import { useAuth } from "@/_context/AuthContext";
 import { Footer } from "@/_components/Footer";
+import { Review } from "@/_components/Review";
+import { LibraryItem } from "@/_components/LibraryItem";
+import { FriendsData } from "@/_components/Friends";
 
 /* ── Types ── */
 interface ReadingBook {
@@ -35,19 +38,6 @@ interface DashboardStats {
   readingGoalProgress: number;
 }
 
-/* ── Mock fetch (replace with real API calls) ── */
-async function fetchDashboard(token: string) {
-  // Replace these with your actual endpoints
-  const headers = { Authorization: `Bearer ${token}` };
-
-  const [stats, currentlyReading, activity] = await Promise.all([
-    fetch("http://localhost:5000/api/dashboard/stats",    { headers }).then(r => r.json()),
-    fetch("http://localhost:5000/api/dashboard/reading",  { headers }).then(r => r.json()),
-    fetch("http://localhost:5000/api/dashboard/activity", { headers }).then(r => r.json()),
-  ]);
-
-  return { stats, currentlyReading, activity };
-}
 
 /* ── Helpers ── */
 function ProgressRing({ pct }: { pct: number }) {
@@ -90,21 +80,17 @@ const MOCK_ACTIVITY: ActivityItem[] = [
   { id: "4", type: "reviewed", bookTitle: "Foundation",         friendName: "Tomasz N.", friendInitials: "TN", time: "3 days ago"    },
 ];
 
-const ACTIVITY_LABELS: Record<ActivityItem["type"], string> = {
-  finished: "finished reading",
-  started:  "started reading",
-  rated:    "rated",
-  reviewed: "reviewed",
-};
 
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
 
   const [stats, setStats]           = useState<DashboardStats>(MOCK_STATS);
-  const [reading, setReading]       = useState<ReadingBook[]>(MOCK_READING);
+  const [reading, setReading]       = useState<LibraryItem[]>([]);
   const [activity, setActivity]     = useState<ActivityItem[]>(MOCK_ACTIVITY);
   const [dataLoading, setDataLoading] = useState(false);
+  const [reviews, setReviews] = useState<Review[]>([])
+  const [friendsData, setFriendsData] = useState<FriendsData[]>([])
 
   useEffect(() => {
     if (!authLoading && !user) router.push("/");
@@ -112,19 +98,24 @@ export default function DashboardPage() {
 
   // Load dashboard data
   useEffect(() => {
-    if (!user) return;
-    const token = localStorage.getItem("token");
-    if (!token) return;
-
-    setDataLoading(true);
-    fetchDashboard(token)
-      .then(({ stats, currentlyReading, activity }) => {
-        if (stats)           setStats(stats);
-        if (currentlyReading) setReading(currentlyReading);
-        if (activity)        setActivity(activity);
-      })
-      .catch(() => { /* keep mock data on error */ })
-      .finally(() => setDataLoading(false));
+    const getDashboardData = async() => {
+          const res = await fetch(`http://localhost:5000/api/user/getDashboardData/${user?.username}`, {
+          method: "GET",
+          headers: {
+              "Content-Type": "application/json"
+          },
+          credentials: "include",
+      });
+      if (!res.ok) {
+          console.error("Failed to put session data");
+          return;
+      }
+        const data = await res.json();
+        setFriendsData(data.friendsData);
+        setReading(data.userReading);
+        setReviews(data.userReviews)
+    }
+    getDashboardData();
   }, [user]);
 
   if (authLoading || !user) {
@@ -140,7 +131,21 @@ export default function DashboardPage() {
 
   const goalPct = Math.round((stats.readingGoalProgress / stats.readingGoal) * 100);
   const initials = user.name.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase();
-
+  function formatTimeAgo(timestamp: string | Date) {
+      const ms = Date.now() - new Date(timestamp+"Z").getTime();
+      const seconds = Math.floor(ms / 1000);
+      
+      if (seconds < 60) return `${seconds} s ago`;
+      
+      const minutes = Math.floor(seconds / 60);
+      if (minutes < 60) return `${minutes} min ago`;
+      
+      const hours = Math.floor(minutes / 60);
+      if (hours < 24) return `${hours} h ago`;
+      
+      const days = Math.floor(hours / 24);
+      return `${days} days ago`;
+  }
   return (
     <>
       <Navbar />
@@ -161,16 +166,14 @@ export default function DashboardPage() {
               <p className="page-subtitle">Here's what's happening with your reading.</p>
             </div>
           </div>
-          <Link href="/library" className="btn-gold btn-lg">+ Add book</Link>
+          <Link href="/books" className="btn-gold btn-lg">+ Add book</Link>
         </div>
 
         {/* ── KPI CARDS ── */}
         <div className="kpi-row" style={{ marginBottom: 28 }}>
           {[
-            { val: stats.booksRead,       label: "Books read this year", sub: "Goal: " + stats.readingGoal },
-            { val: stats.pagesThisWeek,   label: "Pages this week",      sub: "Keep it up!"               },
-            { val: stats.currentStreak + "d", label: "Current streak",   sub: "days in a row"             },
-            { val: stats.avgRating,       label: "Average rating",       sub: "from rated books"          },
+            { val: reading.filter(r => r.status == 'read').length,       label: "Books read this year", sub: "Goal: " + user?.books_Goal },
+            { val: (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1),       label: "Average rating",       sub: "from rated books"          },
           ].map(k => (
             <div className="kpi-card" key={k.label}>
               <div className="kpi-value">{k.val}</div>
@@ -192,7 +195,7 @@ export default function DashboardPage() {
                 <Link href="/library" className="see-all">View library →</Link>
               </div>
 
-              {reading.length === 0 ? (
+              {reading.filter(r => r.status == 'reading').length === 0 ? (
                 <div className="books-empty" style={{ padding: "32px 0" }}>
                   <span className="books-empty-icon">📖</span>
                   <p>You're not reading anything right now.</p>
@@ -202,26 +205,29 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 <div className="dashboard-reading-list">
-                  {reading.map(book => {
-                    const pct = Math.round((book.progress / book.pages) * 100);
+                  {reading
+                  .filter(r => r.status == 'reading')
+                  .slice(0, 3)
+                  .map(reading => {
+                    const pct = Math.round((reading.progress / reading.book.book.pages) * 100);
                     return (
-                      <div className="dashboard-reading-item" key={book.id}>
-                        <img src={book.cover} alt={book.title} className="dashboard-reading-cover" />
+                      <div className="dashboard-reading-item" key={reading.book.book.default_Physical_Edition_Id}>
+                        <img src={reading.book.book.cached_Image.url} alt={reading.book.book.title} className="dashboard-reading-cover" />
                         <div className="dashboard-reading-info">
-                          <div className="dashboard-reading-title">{book.title}</div>
-                          <div className="dashboard-reading-author">{book.author}</div>
+                          <div className="dashboard-reading-title">{reading.book.book.title}</div>
+                          <div className="dashboard-reading-author">{reading.book.contributions[0].author.name}</div>
                           <div className="dashboard-reading-progress-wrap">
                             <div className="lib-progress-bar">
                               <div className="lib-progress-fill" style={{ width: `${pct}%` }} />
                             </div>
                             <span className="lib-progress-text">
-                              p. {book.progress} / {book.pages} · {pct}%
+                              p. {reading.progress} / {reading.book.book.pages} · {pct}%
                             </span>
                           </div>
                         </div>
                         <ProgressRing pct={pct} />
                         <Link
-                          href={`/reading/${book.id}`}
+                          href={`/reading/${reading.book.book.default_Physical_Edition_Id}`}
                           className="add-btn-sm"
                           style={{ textDecoration: "none", flexShrink: 0 }}
                         >
@@ -241,15 +247,26 @@ export default function DashboardPage() {
                 <Link href="/friends" className="see-all">See all →</Link>
               </div>
               <div className="activity-feed">
-                {activity.map(a => (
-                  <div className="activity-row" key={a.id}>
-                    <div className="fbc-activity-avatar">{a.friendInitials}</div>
+              {friendsData
+                .filter(f => f.friendshipStatus === "accepted")
+                .flatMap(f => {
+                  return f.activities.map(a => ({
+                    ...a,
+                    friendName: f.name || f.username,
+                    friendUsername: f.username
+                  }));
+                })
+                .sort((b, c) => new Date(c.timestamp).getTime() - new Date(b.timestamp).getTime())
+                .slice(0, 4)
+                .map((a, index) => (
+                  <div className="activity-row" key={index}>
+                    <div className="fbc-activity-avatar">{a.friendName.split(" ").map(n => n.charAt(0).toUpperCase()).join("").slice(0, 2)}</div>
                     <div className="activity-text">
                       <span style={{ color: "var(--text)", fontWeight: 500 }}>{a.friendName}</span>
-                      {" "}{ACTIVITY_LABELS[a.type]}{" "}
+                      {" "}{a.activityType}{" "}
                       <em style={{ color: "var(--gold)", fontStyle: "normal" }}>"{a.bookTitle}"</em>
                     </div>
-                    <span className="activity-time">{a.time}</span>
+                    <span className="activity-time">{formatTimeAgo(a.timestamp)}</span>
                   </div>
                 ))}
               </div>
@@ -264,23 +281,22 @@ export default function DashboardPage() {
               <h2 className="stats-card-title">Reading Goal 2026</h2>
               <div className="dashboard-goal">
                 <div className="dashboard-goal-ring">
-                  <ProgressRing pct={goalPct} />
+                  <ProgressRing pct={reading.filter(r => r.status == 'read').length / (user?.books_Goal == 0? 1 : user?.books_Goal) * 100} />
                 </div>
                 <div>
                   <div className="dashboard-goal-numbers">
-                    {stats.readingGoalProgress}
-                    <span> / {stats.readingGoal}</span>
+                    {}
+                    <span>{reading.filter(r => r.status == 'read').length} / {user?.books_Goal}</span>
                   </div>
-                  <p className="kpi-sub">{goalPct}% of yearly goal</p>
+                  <p className="kpi-sub">{reading.filter(r => r.status == 'read').length / (user?.books_Goal == 0? 1 : user?.books_Goal) * 100}% of yearly goal</p>
                   <p className="kpi-sub" style={{ marginTop: 4 }}>
-                    {stats.readingGoal - stats.readingGoalProgress} books to go
+                    { user?.books_Goal || 0 - reading.filter(r => r.status == 'read').length} books to go
                   </p>
                 </div>
               </div>
               <div className="goal-track" style={{ marginTop: 16 }}>
                 <div className="goal-fill" style={{ width: `${goalPct}%` }} />
               </div>
-              <Link href="/statistics" className="goal-link">Full statistics →</Link>
             </div>
 
             {/* Quick links */}
@@ -290,9 +306,9 @@ export default function DashboardPage() {
                 {[
                   { href: "/books",           icon: "🔍", label: "Browse Books"       },
                   { href: "/recommendations", icon: "✨", label: "Recommendations"    },
-                  { href: "/statistics",      icon: "📊", label: "Statistics"         },
+                  { href: "/library",         icon: "📚", label: "Library"         },
                   { href: "/friends",         icon: "👥", label: "Friends"            },
-                  { href: "/profile",         icon: "👤", label: "Edit Profile"       },
+                  { href: "/profile",         icon: "👤", label: "Profile"       },
                   { href: "/settings",        icon: "⚙️", label: "Settings"           },
                 ].map(l => (
                   <Link key={l.href} href={l.href} className="dashboard-quick-link">
@@ -304,32 +320,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Weekly activity heatmap */}
-            <div className="stats-card">
-              <h2 className="stats-card-title">This Week</h2>
-              <div className="rp-week-chart" style={{ height: 100 }}>
-                {["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map((day, i) => {
-                  const vals = [28, 0, 55, 30, 61, 42, 0];
-                  const max  = Math.max(...vals);
-                  return (
-                    <div className="rp-week-col" key={day}>
-                      <div className="rp-week-bar-wrap">
-                        <div
-                          className="rp-week-bar"
-                          style={{ height: max ? `${(vals[i] / max) * 100}%` : "0%" }}
-                          title={`${vals[i]} pages`}
-                        />
-                      </div>
-                      <div className="rp-week-val">{vals[i] > 0 ? vals[i] : ""}</div>
-                      <div className="rp-week-day">{day}</div>
-                    </div>
-                  );
-                })}
-              </div>
-              <p className="kpi-sub" style={{ textAlign: "center", marginTop: 8 }}>
-                216 pages this week
-              </p>
-            </div>
+            
           </div>
         </div>
       </div>

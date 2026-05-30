@@ -110,7 +110,6 @@ export function Navbar() {
                 <Link href="/dashboard"  className="nav-dropdown-item">📊 Dashboard</Link>
                 <Link href="/profile"    className="nav-dropdown-item">👤 My Profile</Link>
                 <Link href="/library"    className="nav-dropdown-item">📚 My Library</Link>
-                <Link href="/statistics" className="nav-dropdown-item">📈 Statistics</Link>
                 <Link href="/friends"    className="nav-dropdown-item">👥 Friends</Link>
 
                 <div className="nav-dropdown-divider" />

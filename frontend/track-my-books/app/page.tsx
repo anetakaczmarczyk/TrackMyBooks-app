@@ -103,11 +103,6 @@ export default function Home() {
               <p>Organize and manage your book collection</p>
             </div>
             <div className="feature-item">
-              <div className="feature-icon">📊</div>
-              <h3>Statistics</h3>
-              <p>Track your reading progress</p>
-            </div>
-            <div className="feature-item">
               <div className="feature-icon">🌟</div>
               <h3>Recommendations</h3>
               <p>Personalized suggestions for you</p>

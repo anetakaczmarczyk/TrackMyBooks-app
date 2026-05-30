@@ -65,7 +65,6 @@ public async Task<IEnumerable<FriendWithBooksDto>> GetFriendsData(string usernam
 {
     using var connection = _db.CreateConnection();
 
-    // 1. Pobieranie znajomych i ich statusów (Z DODANYM ROZRÓŻNIENIEM USER1/USER2)
     var friendsQuery = @"
         SELECT 
             f.status AS FriendshipStatus,

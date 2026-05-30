@@ -266,4 +266,35 @@ public class UserController : ControllerBase
         return Ok(new { user, reviews, recentActivity, libraryItems });
     }
 
+    [HttpGet("getDashboardData/{username}")]
+        public async Task<IActionResult> GetDashboardData([FromRoute] string username)
+    {
+        var userReviews = await _reviewRepository.GetReviewsByUsername(username);
+        var friendsData = await _userRepository.GetFriendsData(username);
+
+        var userReadingStatuses = await _booksdbRepository.GetUserReadingStatuses(username);
+        var userReading = new List<UserLibraryItemDto>();
+        foreach (var status in userReadingStatuses)
+        {
+            var bookData = await _client.GetBookById(status.Book_Id);
+            if (bookData != null && bookData.Count > 0)
+            {
+                userReading.Add(new UserLibraryItemDto
+                {
+                    Status = status.Status,
+                    Progress = status.Progress,
+                    Start_Date = status.Start_Date,
+                    End_Date = status.End_Date,
+                    Book = bookData[0]
+                });
+            }
+        }
+
+        return Ok(new { 
+            userReviews = userReviews,
+            userReading = userReading,
+            friendsData = friendsData
+         });
+    }
+
 }

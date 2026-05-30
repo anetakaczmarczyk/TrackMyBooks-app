@@ -110,8 +110,7 @@ export default function ReadingPage({
                 router.push("/");
                 return;
             }
-            const data = await res.json();
-            console.log(data);
+            const data = await res.json();;
             setBookData(data.bookData);
             setReadingStatus(data.reading);
             setSessions(data.readingSessions);

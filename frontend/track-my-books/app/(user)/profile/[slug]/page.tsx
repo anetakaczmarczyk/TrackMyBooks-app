@@ -52,7 +52,6 @@ export default function ProfilePage({
             const res = await fetch(`http://localhost:5000/api/user/${slug}`);
             if (res.ok) {
                 const data = await res.json();
-                console.log("Fetched user profile data:", data);
                 setUserData(data.user);
                 setReviews(data.reviews);
                 setRecentActivity(data.recentActivity);
@@ -172,9 +171,6 @@ export default function ProfilePage({
                     <div className="goal-fill" style={{ width: `${Math.min(100, (readingStatuses.filter(s => s.status === "read").length / (userData?.books_Goal || 1)) * 100)}%` }} />
                   </div>
                   <p className="goal-sub" style={{ marginTop: 8 }}>{Math.round((readingStatuses.filter(s => s.status === "read").length / (userData?.books_Goal || 1)) * 100)}% annual goal · {(userData?.books_Goal || 0) - readingStatuses.filter(s => s.status === "read").length < 0 ? 0 : (userData?.books_Goal || 0) - readingStatuses.filter(s => s.status === "read").length} books remaining</p>
-                  {user?.username?.toLowerCase() === slug?.toLowerCase() && (
-                    <Link href="/statistics" className="goal-link">View full statistics →</Link>
-                  )}
                 </div>
               </div>
             </div>
