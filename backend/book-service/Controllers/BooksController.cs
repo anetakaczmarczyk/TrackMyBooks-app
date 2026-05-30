@@ -71,6 +71,23 @@ public class BooksController : ControllerBase
         return Ok(libraryItems);
     }
 
+    [HttpPost("getReadingData")]
+    public async Task<IActionResult> GetReadingData([FromBody] GetReadingDataRequest request)
+    {
+        if (await _booksdbRepository.GetBookReadingStatus(request.BookId, request.Username) == null)
+        {
+            return NotFound("No reading status found for this book and user.");
+        }
+        var data = await _booksdbRepository.GetBookReadingData(request.BookId, request.Username);
+        var bookData = await _client.GetBookById(request.BookId);
+        if (bookData == null || bookData.Count == 0)
+        {
+            return NotFound("Book not found.");
+        }
+        data.bookData = bookData[0];
+        return Ok(data);
+    }
+
     [HttpPut("addToReadingStatus")]
     public async Task<IActionResult> AddBookToReadingStatus([FromBody] AddToReadingStatusRequest request)
     {
@@ -97,5 +114,25 @@ public class BooksController : ControllerBase
         }
 
         return Ok("Book added to list!");
+    }
+
+    [HttpPost("updateProgress")]
+    public async Task<IActionResult> UpdateProgress([FromBody] UpdateProgressRequest request)
+    {
+        await _booksdbRepository.UpdateProgress(request.Username, request.Book_Id, request.Progress, request.IsFinished);
+        return Ok("Progress updated!");
+    }
+
+    [HttpPost("createSession")]
+    public async Task<IActionResult> CreateSession([FromBody] CreateSessionRequest request)
+    {
+        await _booksdbRepository.CreateSession(request.ReadingStatus_Id, request.Pages_Started, request.Pages_Finished, request.Duration_Minutes, request.Log_Date);
+        return Ok("Session created!");
+    }
+        [HttpPost("createNote")]
+    public async Task<IActionResult> CreateNote([FromBody] CreateNoteRequest request)
+    {
+        await _booksdbRepository.CreateNote(request.ReadingStatus_Id, request.Note, request.Page_Number);
+        return Ok("Session created!");
     }
 }

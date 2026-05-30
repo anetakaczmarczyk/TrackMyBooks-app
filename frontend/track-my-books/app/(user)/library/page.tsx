@@ -121,12 +121,12 @@ export default function LibraryPage() {
                         fill="none"
                         stroke="var(--gold)"
                         strokeWidth="2.5"
-                        strokeDasharray={`${(status.progress / 100) * 94.2} 94.2`}
+                        strokeDasharray={`${(status.progress / status.book.book.pages) * 94.2} 94.2`}
                         strokeLinecap="round"
                         transform="rotate(-90 18 18)"
                       />
                     </svg>
-                    <span>{status.progress}%</span>
+                    <span>{Math.round((status.progress / status.book.book.pages) * 100)}%</span>
                   </div>
                 )}
               </div>
@@ -134,7 +134,7 @@ export default function LibraryPage() {
               <div className="lib-info">
                 <button
                   className="book-title-btn"
-                  onClick={() => router.push(`/books/${status.book.book.default_Physical_Edition_Id}`)}
+                  onClick={() => router.push(`/reading/${status.book.book.default_Physical_Edition_Id}`)}
                 >
                   {status.book.book.title}
                 </button>

@@ -241,7 +241,7 @@ export default function BookDetail({ bookbyId, reviews }: { bookbyId: BookByIdRe
                 )}
                 
                 {savedStatus === "reading" && (
-                  <a href="/czytanie/3" className="bdh-reading-link">Open Reading Panel →</a>
+                  <a href={`/reading/${bookbyId.book.default_Physical_Edition_Id}`} className="bdh-reading-link">Open Reading Panel →</a>
                 )}
               </>
             )}

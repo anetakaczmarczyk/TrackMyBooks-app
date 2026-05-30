@@ -9,7 +9,7 @@ export default function ProfilePage() {
     const { user, loading: authLoading, refreshUser } = useAuth();
     const router = useRouter();
     useEffect(() => {
-      if (!authLoading && !user) router.push("/");
+      if (!authLoading && !user) router.push("/library");
       if (user) {
         router.push(`/profile/${user.username}`);
       }

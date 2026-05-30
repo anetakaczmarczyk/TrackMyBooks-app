@@ -77,6 +77,20 @@ public class BooksdbRepository
         return await connection.QueryAsync<ReadingStatus>(query, new {Username = username });
     }
 
+    public async Task UpdateProgress(string username, int bookId, int progress, bool isFinished)
+    {
+        using var connection = _db.CreateConnection();
+        if (isFinished)
+        {
+            var query = "UPDATE ReadingStatus SET progress = @Progress, end_date = CURRENT_DATE, status = 'read' WHERE username = @Username AND book_id = @BookId";
+            await connection.ExecuteAsync(query, new { Username = username, BookId = bookId, Progress = progress });
+        }
+        else
+        {
+            var query = "UPDATE ReadingStatus SET progress = @Progress, status = 'reading', end_date = NULL WHERE username = @Username AND book_id = @BookId";
+            await connection.ExecuteAsync(query, new { Username = username, BookId = bookId, Progress = progress });
+        }
+    }
     public async Task AddToActivity(string username, string bookTitle, string status)
     {
         using var connection = _db.CreateConnection();
@@ -130,5 +144,41 @@ public class BooksdbRepository
         using var connection = _db.CreateConnection();
         var query = "SELECT * FROM UserActivity WHERE username = @Username ORDER BY timestamp DESC LIMIT 10";
         return await connection.QueryAsync<UserActivity>(query, new { Username = username });
+    }
+
+    public async Task<ReadingData> GetBookReadingData(int bookId, string username)
+    {
+        using var connection = _db.CreateConnection();
+        var readingStatusQuery = "SELECT * FROM ReadingStatus WHERE book_id = @BookId AND username = @Username";
+        var readingStatus = await connection.QueryFirstOrDefaultAsync<Reading>(readingStatusQuery, new { BookId = bookId, Username = username });
+
+        if (readingStatus == null)
+        {
+            return null; 
+        }
+        var sessionsQuery = "SELECT * FROM Sessions WHERE readingStatus_id = @ReadingStatusId ORDER BY created_at DESC";
+        var readingSessions = (await connection.QueryAsync<ReadingSession>(sessionsQuery, new { ReadingStatusId = readingStatus.Id })).ToList();
+
+        var bookNotesQuery = "SELECT * FROM BookNotes WHERE readingStatus_id = @ReadingStatusId ORDER BY created_at DESC";
+        var bookNotes = (await connection.QueryAsync<BookNote>(bookNotesQuery, new { ReadingStatusId = readingStatus.Id })).ToList();
+        return new ReadingData
+        {
+            Reading = readingStatus,
+            ReadingSessions = readingSessions,
+            BookNotes = bookNotes
+        };
+    }
+    public async Task CreateSession(int readingStatusId, int pagesStarted, int pagesFinished, int durationMinutes, DateTime logDate)
+    {
+        using var connection = _db.CreateConnection();
+        var query = "INSERT INTO Sessions (readingStatus_id, pages_started, pages_finished, duration_minutes, created_at) VALUES (@ReadingId, @PagesStarted, @PagesFinished, @DurationMinutes, @LogDate)";
+        await connection.ExecuteAsync(query, new { ReadingId = readingStatusId, PagesStarted = pagesStarted, PagesFinished = pagesFinished, DurationMinutes = durationMinutes, LogDate = logDate });
+    }
+
+    public async Task CreateNote(int readingStatusId, string note, int pageNumber)
+    {
+        using var connection = _db.CreateConnection();
+        var query = "INSERT INTO BookNotes (readingStatus_id, note, page_number) VALUES (@ReadingId, @Note, @PageNumber)";
+        await connection.ExecuteAsync(query, new { ReadingId = readingStatusId, Note = note, PageNumber = pageNumber });
     }
 }

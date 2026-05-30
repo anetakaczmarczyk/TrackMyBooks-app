@@ -3346,7 +3346,7 @@ footer {
 /* Mini stats */
 .rp-mini-stats {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 12px;
 }
 .rp-mini-stat {
