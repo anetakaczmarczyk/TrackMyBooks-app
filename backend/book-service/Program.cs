@@ -3,14 +3,18 @@ using book_service.Services;
 using DbUp;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using book_service.Repositories;
+
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-var key = Encoding.ASCII.GetBytes("p4#K9v&L2m@B8xZ!qR7nN#yP5cW1jF6sD3eH0aV4uY0gT"); // Example key, replace with your actual key, safe to store in a secure location
+var key = Encoding.ASCII.GetBytes("p4#K9v&L2m@B8xZ!qR7nN#yP5cW1jF6sD3eH0aV4uY0gT"); 
 
+// Odczytanie tokena uwierzytelniającego zewnętrznego API (Hardcover) zapisanego lokalnie w pliku tekstowym
 string token = File.ReadAllText("authorizationKey.txt").Trim();
 
 builder.Services.AddControllers();
 
+// Rejestracja dedykowanego klienta HTTP (HardcoverClient) wraz z automatyczną konfiguracją nagłówka autoryzacyjnego
 builder.Services.AddHttpClient<HardcoverClient>(c => 
 {
     c.BaseAddress = new Uri("https://api.hardcover.app/v1/graphql");
@@ -23,10 +27,11 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowSpecificOrigin",
         policy =>
         {
-            policy.WithOrigins("http://localhost:3000") // Adres Twojego frontendu
+            policy.WithOrigins("http://localhost:3000") 
                   .AllowAnyHeader()
                   .AllowAnyMethod()
-                  .AllowCredentials();
+                  // AllowCredentials() jest kluczowe, ponieważ nasza aplikacja przesyła token JWT w ciasteczkach
+                  .AllowCredentials(); 
         });
 });
 
@@ -46,6 +51,8 @@ builder.Services.AddAuthentication(options =>
     };
     options.Events = new JwtBearerEvents
     {
+        // Domyślnie JWT szuka tokenu w nagłówku "Authorization: Bearer <token>".
+        // Nadpisujemy to zdarzenie, aby wyciągać token bezpośrednio z bezpiecznego ciasteczka "authToken".
         OnMessageReceived = context =>
         {
             var accessToken = context.Request.Cookies["authToken"];
@@ -85,9 +92,13 @@ if (upgrader.IsUpgradeRequired())
     Console.WriteLine("Database upgrade performed.");
 }
 
-builder.Services.AddScoped<UserRepository>();
-builder.Services.AddScoped<ReviewRepository>();
-builder.Services.AddScoped<BooksdbRepository>();
+// Rejestracja naszych interfejsów w kontenerze IoC
+// AddScoped oznacza, że dla każdego żądania HTTP powstanie dokładnie jedna instancja danego repozytorium
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
+builder.Services.AddScoped<IBooksdbRepository, BooksdbRepository>();
+
+// Fabryka połączeń bazodanowych może być zarejestrowana jako Singleton
 builder.Services.AddSingleton<DbConnectionFactory>();
 
 var app = builder.Build();

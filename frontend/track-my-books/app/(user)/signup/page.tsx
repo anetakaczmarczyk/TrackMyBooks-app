@@ -28,18 +28,23 @@ const GENRES = ["Classical", "Sci-Fi", "Fantasy", "Crime", "Romance", "History",
 export default function RegisterPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  
+  // Stany formularza konta
   const [name, setName] = useState("");
   const [nick, setNick] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
   const [focused, setFocused] = useState<string | null>(null);
+  
+  // Stany formularza preferencji
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [agree, setAgree] = useState(false);
   const [step, setStep] = useState(1);
   const [emailExists, setEmailExists] = useState(false);
   const [usernameExists, setUsernameExists] = useState(false);
 
+  // Przekierowanie zalogowanego użytkownika na pulpit (zamiana historii przeglądarki przez replace)
   useEffect(() => {
       if (!authLoading && user) router.replace("/dashboard");
     }, [user, authLoading, router]);
@@ -52,11 +57,13 @@ export default function RegisterPage() {
     return null; 
   } 
 
+  // Dodawanie/usuwanie gatunku literackiego z listy wybranych preferencji
   const toggleGenre = (g: string) =>
     setSelectedGenres(prev =>
       prev.includes(g) ? prev.filter(x => x !== g) : [...prev, g]
     );
 
+  // Kalkulator siły hasła na podstawie wyrażeń regularnych
   const strength = (() => {
     if (!password) return 0;
     let s = 1;
@@ -67,7 +74,7 @@ export default function RegisterPage() {
     else s = 0;
     return s;
   })();
-
+  // Asynchroniczne sprawdzenie w locie czy e-mail nie jest już zajęty.
   const checkEmailExists = async (email: string) => {
     if (!email) {
       setEmailExists(false);
@@ -78,6 +85,7 @@ export default function RegisterPage() {
     setEmailExists(data.taken);
   }
 
+  // Asynchroniczne sprawdzenie w locie czy nazwa użytkownika jest wolna
   const checkUsernameExists = async (username: string) => {
     if (!username) {
       setUsernameExists(false);
@@ -88,6 +96,7 @@ export default function RegisterPage() {
     setUsernameExists(data.taken);
   }
 
+  // Wysłanie skonsolidowanych danych użytkownika na backend w celu utworzenia konta
   const handleCreateAccount = async () => {
     const newUser: User = {
       name,
@@ -124,7 +133,7 @@ export default function RegisterPage() {
     
 
 <div className="page">
-        {/* LEFT */}
+        {/* LEFT PANEL */}
         <div className="left-panel">
           <div className="book-wall">
             {BG_BOOKS.map((src, i) => (
@@ -161,11 +170,11 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        {/* RIGHT */}
+        {/* RIGHT PANEL (FORM CONTAINER) */}
         <div className="right-panel">
           <div className="form-container">
 
-            {/* Steps */}
+            {/* Wskaźnik kroków rejestracji (Konto / Preferencje) */}
             <div className="steps-indicator">
               <div className={`step-dot ${step >= 1 ? (step > 1 ? "done" : "active") : ""}`}>
                 <div className="step-circle">{step > 1 ? "✓" : "1"}</div>
@@ -178,6 +187,7 @@ export default function RegisterPage() {
               </div>
             </div>
 
+            {/* KROK 1: Dane podstawowe konta */}
             {step === 1 && (
               <div className="step-anim" key="step1">
                 <div className="form-eyebrow">
@@ -222,7 +232,7 @@ export default function RegisterPage() {
                       onFocus={() => setFocused("nick")}
                       onBlur={() => {
                         setFocused(null);
-                        checkUsernameExists(nick);
+                        checkUsernameExists(nick); // Walidacja loginu po wyjściu z pola (onBlur)
                       }}
                     />
                     <span className="input-icon">👥</span>
@@ -243,7 +253,7 @@ export default function RegisterPage() {
                       onFocus={() => setFocused("email")}
                       onBlur={() => {
                         setFocused(null);
-                        checkEmailExists(email);
+                        checkEmailExists(email); // Walidacja e-maila po wyjściu z pola (
                       }}
                     />
                     <span className="input-icon">✉</span>
@@ -294,6 +304,7 @@ export default function RegisterPage() {
 
                 <div style={{ height: 12 }} />
 
+                {/* Przycisk przejścia do kroku 2 pozostaje nieaktywny, dopóki wszystkie dane nie są prawidłowe lub jeśli dane są zajęte */}
                 <button
                   className="btn-submit"
                   onClick={() => setStep(2)}
@@ -309,6 +320,7 @@ export default function RegisterPage() {
               </div>
             )}
 
+            {/* KROK 2: Preferencje gatunkowe oraz akceptacja regulaminu */}
             {step === 2 && (
               <div className="step-anim" key="step2">
                 <div className="form-eyebrow">

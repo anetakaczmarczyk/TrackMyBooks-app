@@ -7,9 +7,10 @@ import { useAuth } from "@/_context/AuthContext";
 import { useRouter } from "next/navigation";
 import { LibraryItem } from "@/_components/LibraryItem";
 
+// Tablica reprezentująca wspierane w aplikacji statusy czytelnicze
 const STATUSES = ["reading", "read", "wishlist", "abandoned"];
 
-
+// Mapowanie technicznych nazw statusów na odpowiednie ikony Emoji w zakładkach
 const STATUS_ICONS: Record<string, string> = {
   "reading":       "📖",
   "read":        "✅",
@@ -17,6 +18,8 @@ const STATUS_ICONS: Record<string, string> = {
   "abandoned":          "💤",
 };
 
+// Pomocniczy komponent renderujący gwiazdki oceny 
+// Dynamicznie dobiera kolor (złoty dla ocenionych, szary dla nieaktywnych), aby odzwierciedlić ocenę w skali 1-5
 function Stars({ rating }: { rating?: number }) {
   if (!rating) return null;
   return (
@@ -39,11 +42,13 @@ export default function LibraryPage() {
   const totalBooks = books.length;
   const readBooks  = books.filter(b => b.status === "read").length;
 
+  // Zabezpieczenie ścieżki przed nieautoryzowanym dostępem
   useEffect(() => {
     if (!authLoading && !user) router.push("/");
   }, [user, authLoading, router]);
 
-    useEffect(() => {
+  // Pobranie pełnej biblioteki użytkownika przy załadowaniu komponentu
+  useEffect(() => {
     if (!user) return;
     const fetchLibrary = async () => {
       setLoadingData(true);
@@ -88,7 +93,7 @@ export default function LibraryPage() {
           </div>
         </div>
 
-        {/* Status tabs */}
+        {/* Zakładki statusów - każda wyświetla ikonę, nazwę i dynamicznie wyliczoną liczbę posiadanych książek */}
         <div className="lib-tabs">
           {STATUSES.map(s => (
             <button
@@ -102,6 +107,7 @@ export default function LibraryPage() {
           ))}
         </div>
 
+        {/* Siatka książek przefiltrowana po aktualnie wybranej zakładce (b.status === status) */}
         <div className="lib-grid">
           {books
           .filter(b => b.status === status)
@@ -109,6 +115,8 @@ export default function LibraryPage() {
             <div className="lib-card" key={`${status.book.book.default_Physical_Edition_Id}-${index}`}>
               <div className="lib-cover-wrap">
                 <img src={status.book.book.cached_Image?.url} alt={status.book.book.title} className="lib-cover" />
+                
+                {/* Kołowy wskaźnik postępu nałożony bezpośrednio na okładkę czytanej książki. */}
                 {status.progress !== undefined && (
                   <div className="lib-progress-ring">
                     <svg viewBox="0 0 36 36">
@@ -128,6 +136,7 @@ export default function LibraryPage() {
                 )}
               </div>
 
+              {/* Informacje o książce, ocena gwiazdkowa oraz pasek postępu */}
               <div className="lib-info">
                 <button
                   className="book-title-btn"

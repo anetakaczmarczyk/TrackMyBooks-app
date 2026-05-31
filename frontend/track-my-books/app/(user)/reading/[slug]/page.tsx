@@ -15,6 +15,7 @@ const STATUSES = [
   { id: "abandoned", icon: "💤", label: "Abandoned"  },
 ];
 
+// Pomocnicza funkcja formatująca liczby do postaci dwucyfrowej
 function pad(n: number) { return String(n).padStart(2, "0"); }
 export default function ReadingPage({
     params,
@@ -36,31 +37,33 @@ export default function ReadingPage({
   const [status, setStatus]           = useState("reading");
   const [showLogForm, setShowLogForm] = useState(false);
 
-  // Session timer
+  // Stany stopera sesji czytelniczej
   const [timerActive, setTimerActive] = useState(false);
   const [timerSeconds, setTimerSeconds] = useState(0);
   const [sessionStartPage, setSessionStartPage] = useState(268);
   const [sessionEndPage, setSessionEndPage]     = useState("268");
+
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Note
+  // Stany notatek
   const [note, setNote] = useState("");
   const [savedNotes, setSavedNotes] = useState<{ page: number; text: string }[]>([]);
   const [notePage, setNotePage] = useState<number>(currentPage || 0);
 
-  //New log
+  // Stany ręcznego logowania nowej sesji
   const [startPage, setStartPage] = useState(0);
   const [finishPage, setFinishPage] = useState(0);
   const [logTime, setLogTime] = useState(0);
   const [logDate, setLogDate] = useState(new Date().toISOString().split("T")[0]);
 
 
-  // Status confirm modal
+  // Stan modalnego okna potwierdzenia zmiany statusu
   const [confirmStatus, setConfirmStatus] = useState<string | null>(null);
 
   const pct = Math.round((currentPage / (bookData?.book.pages || 1)) * 100);
   const pagesLeft = (bookData?.book.pages || 1) - currentPage;
 
+    // Słowniki dla dynamicznego tekstu w oknie potwierdzenia statusu
     const modalTitles: { [key: string]: string } = {
         abandoned: "Abandon Book?",
         read: "Mark as Read?",
@@ -82,6 +85,7 @@ export default function ReadingPage({
         wishlist: "Add to Wishlist"
     };
 
+  // Efekt zarządzający cyklem życia stopera. Automatycznie czyści interwał przy odmontowaniu komponentu
   useEffect(() => {
     if (timerActive) {
       intervalRef.current = setInterval(() => setTimerSeconds(s => s + 1), 1000);
@@ -91,10 +95,12 @@ export default function ReadingPage({
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [timerActive]);
 
+    // Ochrona ścieżki przed niezalogowanymi użytkownikami
     useEffect(() => {
         if (!authLoading && !user) router.push("/");
     }, [user, authLoading, router]);
 
+    // Pobranie danych o postępie czytania książki, notatkach i historii sesji powiązanych z tym użytkownikiem
     useEffect(() => {
         if (!user) return;
         const getData = async () => {
@@ -114,6 +120,7 @@ export default function ReadingPage({
             setBookData(data.bookData);
             setReadingStatus(data.reading);
             setSessions(data.readingSessions);
+            // Sortujemy notatki rosnąco według numeru strony, ułatwiając czytanie notatek chronologicznie
             setNotes([...data.bookNotes].sort((a: BookNote, b: BookNote) => a.page_Number - b.page_Number));
             setCurrentPage(data.reading.progress);
             setInputPage(data.reading.progress);
@@ -121,7 +128,16 @@ export default function ReadingPage({
         getData();
     }, [user]);
 
-
+    if (authLoading || !user) {
+      return (
+        <><Navbar />
+          <div className="inner-page books-loading">
+            <div className="books-loading-spinner" />
+            <p>Loading…</p>
+          </div>
+        </>
+      );
+    }
 
   const startSession = () => {
     setSessionStartPage(currentPage);
@@ -130,12 +146,16 @@ export default function ReadingPage({
     setTimerActive(true);
   };
 
+  // Zakończenie sesji czytania mierzonej stoperem.
+  // Zapisuje sesję w bazie oraz dokonuje aktualizacji postępu (progress) w profilu użytkownika.
   const finishSession = async() => {
     setTimerActive(false);
     const endP = Math.min(bookData?.book.pages || 1, Math.max(currentPage, +sessionEndPage || currentPage));
     const pages = endP - sessionStartPage;
     const minutes = Math.round(timerSeconds / 60);
+    
     if (pages > 0 || minutes > 0) {
+      // 1. Zapisanie historii sesji
       const res = await fetch(`http://localhost:5000/api/books/createSession`, {
             method: "POST",
             headers: {
@@ -149,6 +169,7 @@ export default function ReadingPage({
             return;
         }
 
+      // 2. Aktualizacja nadrzędnego postępu książki w bibliotece
       const response = await fetch(`http://localhost:5000/api/books/updateProgress`, {
         method: "POST",
         headers: {
@@ -167,6 +188,7 @@ export default function ReadingPage({
     setSessionEndPage(String(currentPage));
   };
 
+  // Ręczne logowanie sesji czytania
   const addSession = async()=>{
       const res = await fetch(`http://localhost:5000/api/books/createSession`, {
         method: "POST",
@@ -197,6 +219,7 @@ export default function ReadingPage({
     
   }
 
+  // Szybki zapis aktualnego numeru strony
   const updatePage = async() => {
     const res = await fetch(`http://localhost:5000/api/books/updateProgress`, {
         method: "POST",
@@ -214,10 +237,12 @@ export default function ReadingPage({
 
   };
 
+  // Przechwycenie próby zmiany statusu i otwarcie okna modalnego
   const handleStatusChange = async(id: string) => {
      setConfirmStatus(id);
   };
 
+  // Potwierdzenie zmiany statusu książki
   const confirmStatusChange = async() => {
     if (!confirmStatus) return;
     setStatus(confirmStatus);
@@ -328,6 +353,7 @@ export default function ReadingPage({
                 <div className="rp-timer-status">{timerActive ? "⏱ Session in progress…" : "Ready to start"}</div>
               </div>
 
+          {/* Interfejs dynamiczny dostosowany do stanu stopera */}
           {!timerActive ? (
               (readingStatus?.progress || 0) < (bookData?.book.pages || 1) ? (
                 <button className="btn-submit" style={{ maxWidth: 200 }} onClick={startSession}>
@@ -503,7 +529,7 @@ export default function ReadingPage({
           </div>
         </div>
 
-        {/* ── CONFIRM MODAL ── */}
+        {/* Renderowanie warunkowe okna potwierdzenia chroniącego przed utratą danych */}
         {confirmStatus && (
           <div className="rp-modal-backdrop">
             <div className="rp-modal">

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/_context/AuthContext";
 
+// Definicje linków nawigacyjnych dla gości oraz zalogowanych użytkowników
 const GUEST_LINKS = [
   { href: "/books",           label: "Books"           },
   { href: "/recommendations", label: "Recommendations" },
@@ -29,7 +30,7 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", handler);
   }, []);
 
-  // Close dropdown when clicking outside
+  // Obsługa kliknięć poza menu rozwijanym profilu (Dropdown) - zamyka menu, gdy użytkownik kliknie w dowolne inne miejsce na stronie
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -40,12 +41,12 @@ export function Navbar() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Close dropdown on route change
+  // Automatyczne zamykanie menu profilowego przy zmianie podstrony
   useEffect(() => { setDropdownOpen(false); }, [pathname]);
 
   const links = user ? AUTH_LINKS : GUEST_LINKS;
 
-  // Initials from name
+  // Generowanie maksymalnie dwuliterowego inicjału na potrzeby domyślnego awatara
   const initials = user?.name
     .split(" ")
     .map(w => w[0])
@@ -61,7 +62,7 @@ export function Navbar() {
         <span className="logo-text">Track <span>My</span> Books</span>
       </Link>
 
-      {/* Nav links */}
+      {/* Dynamiczne renderowanie linków nawigacyjnych */}
       <ul className="nav-links">
         {links.map(l => (
           <li key={l.href}>
@@ -75,13 +76,12 @@ export function Navbar() {
         ))}
       </ul>
 
-      {/* Right side */}
+      {/* Prawa strona nawigacji */}
       <div className="nav-auth">
         {loading ? (
-          // Skeleton while checking token
           <div className="nav-skeleton" />
         ) : user ? (
-          // ── LOGGED IN ──
+          // ── WIDOK DLA ZALOGOWANEGO UŻYTKOWNIKA ──
           <div className="nav-user-wrap" ref={dropdownRef}>
             <button
               className="nav-user-btn"
@@ -95,18 +95,17 @@ export function Navbar() {
 
             {dropdownOpen && (
               <div className="nav-dropdown">
-                {/* User info */}
+                {/* Nagłówek menu profilowego */}
                 <div className="nav-dropdown-header">
                   <div className="nav-dropdown-avatar">{initials}</div>
                   <div>
                     <div className="nav-dropdown-name">{user.name}</div>
-                    {/* <div className="nav-dropdown-handle">@{user.handle}</div> */}
                   </div>
                 </div>
 
                 <div className="nav-dropdown-divider" />
 
-                {/* Links */}
+                {/* Sekcja linków nawigacyjnych w panelu użytkownika */}
                 <Link href="/dashboard"  className="nav-dropdown-item">📊 Dashboard</Link>
                 <Link href="/profile"    className="nav-dropdown-item">👤 My Profile</Link>
                 <Link href="/library"    className="nav-dropdown-item">📚 My Library</Link>
@@ -125,7 +124,7 @@ export function Navbar() {
             )}
           </div>
         ) : (
-          // ── GUEST ──
+          // ── WIDOK DLA GOŚCIA ──
           <>
             <Link className="btn-ghost" href="/login">Login</Link>
             <Link className="btn-gold"  href="/signup">Sign Up</Link>

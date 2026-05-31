@@ -13,7 +13,7 @@ const GENRES = [
 ];
 
 const SORTS = [
-  "Rating: highest", "Title: A–Z", "Newest first", "Oldest first",
+  "Rating: highest", "Title: A-Z", "Newest first", "Oldest first",
 ];
 
 const ITEMS_PER_PAGE = 54;
@@ -28,7 +28,6 @@ async function fetchBooks(startNumber: number, itemsPerPage: number): Promise<Bo
     });
     if (!response.ok) return [];
     const data = await response.json();
-    console.log(data)
     return data
     .filter((b: any) => b.default_physical_edition_id)
     .map((book: any) =>({
@@ -43,6 +42,8 @@ async function fetchBooks(startNumber: number, itemsPerPage: number): Promise<Bo
 
 
 export default function BooksPage() {
+  // Szybkie pobranie i zapamiętanie pierwszej paczki 1000 książek przy użyciu SWR
+  // Wyłączamy automatyczne ponowne odpytywanie API przy powrocie na kartę, aby oszczędzić zasoby sieciowe
   const { data: initialBooks } = useSWR('initial-books', () => fetchBooks(0, INITIAL_BATCH), {
     revalidateOnFocus: false,
     revalidateOnReconnect: false,
@@ -51,14 +52,14 @@ export default function BooksPage() {
   });
 
   const [allBooks, setAllBooks] = useState<Book[]>([]);
-  const [isBackgroundLoading, setIsBackgroundLoading] = useState(false);
 
+  // Pobieranie w tle pozostałych książek z bazy (partiami po 1000).
+  // Użytkownik widzi i filtruje pierwsze 1000 książek natychmiast, a reszta dociąga się niewidocznie w tle.
   useEffect(() => {
     let isMounted = true;
     if (!initialBooks || initialBooks.length === 0) return;
 
     setAllBooks(initialBooks);
-    setIsBackgroundLoading(true);
 
     async function fetchRest() {
       let offset = INITIAL_BATCH;
@@ -66,6 +67,7 @@ export default function BooksPage() {
         const batch = await fetchBooks(offset, 1000);
         if (!isMounted || batch.length === 0) break;
         setAllBooks(prev => {
+          // Ochrona przed ewentualnym powieleniem tych samych książek w pamięci lokalnej
           const uniqueBatch = batch.filter(b => 
             !prev.some(existing => existing.default_Physical_Edition_Id === b.default_Physical_Edition_Id)
           );
@@ -74,7 +76,6 @@ export default function BooksPage() {
         
         offset += 1000;
       }
-      setIsBackgroundLoading(false);
     }
 
     fetchRest();
@@ -90,6 +91,9 @@ export default function BooksPage() {
 
   useEffect(() => { setPage(1); }, [genre, sort, query]);
 
+  // Filtrowanie i sortowanie tysięcy obiektów w pamięci klienta
+  // Dzięki useMemo proces ten wykonuje się TYLKO wtedy, gdy zmieni się baza książek, wyszukiwana fraza, gatunek lub sortowanie
+  // Zapobiega to opóźnieniu podczas wpisywania tekstu w wyszukiwarkę
   const filtered = useMemo(() => {
     return allBooks
       .filter(b => genre === "All" || b.cached_Tags.Genre?.some((g: GenreTag) => g.tag === genre))
@@ -104,6 +108,8 @@ export default function BooksPage() {
   }, [allBooks, genre, sort, query]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
+  
+  // Algorytm wyliczający skrócony pasek stron z użyciem wielokropków
   const pageNumbers = useMemo(() => {
   return Array.from({ length: totalPages }, (_, i) => i + 1)
     .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 2)
@@ -118,6 +124,7 @@ export default function BooksPage() {
 
   const goToPage = (p: number) => {
     setPage(p);
+    // Płynne przewijanie do samej góry po zmianie strony katalogu
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 

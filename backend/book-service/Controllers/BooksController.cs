@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using book_service.Services;
 using book_service.Models;
+using book_service.Repositories;
 
 namespace book_service.Controllers;
 
@@ -8,15 +9,18 @@ namespace book_service.Controllers;
 [Route("api/[controller]")]
 public class BooksController : ControllerBase
 {
+    // _client odpowiada za zewnętrzne API (Hardcover), a _booksdbRepository za bazę PostgreSQL
     private readonly HardcoverClient _client;
-    private readonly BooksdbRepository _booksdbRepository;
+    private readonly IBooksdbRepository  _booksdbRepository;
 
-    public BooksController(HardcoverClient client, BooksdbRepository booksdbRepository)
+    // Wstrzykiwanie zależności (Dependency Injection) przez interfejsy
+    public BooksController(HardcoverClient client, IBooksdbRepository  booksdbRepository)
     {
         _client = client;
         _booksdbRepository = booksdbRepository;
     }
 
+    // Wyszukiwanie listy książek ze wsparciem dla paginacji
     [HttpPost("search")]
     public async Task<IActionResult> Get([FromBody] AllBooksSearchRequest request) 
     {
@@ -28,7 +32,7 @@ public class BooksController : ControllerBase
         return Ok(data); 
     }
 
-
+    // Pobieranie szczegółów pojedynczej książki bezpośrednio z zewnętrznego API Hardcover
     [HttpPost("bookById")]
     public async Task<IActionResult> Get([FromBody] BookByIdSearchRequest request) 
     {
@@ -37,13 +41,26 @@ public class BooksController : ControllerBase
             return BadRequest("Invalid request. Please provide a valid book ID.");
         }
         var data = await _client.GetBookById(request.bookId);
-        // var bestBook = data.OrderByDescending(b => b.Ratings_Count).FirstOrDefault();
         return Ok(data); 
     }
 
+    [HttpGet("slider-books")]
+    public async Task<IActionResult> GetDashboardBooks()
+    {
+        var trending = await _client.GetTrendingBooks();
+        var news = await _client.GetNewReleases();
+
+        return Ok(new {
+            trending,
+            news
+        });
+    }
+
+    // Główny silnik rekomendacji - dopasowuje książki do nastroju wybranego przez użytkownika
     [HttpGet("getRecommendations")]
     public async Task<IActionResult> GetRecommendations([FromQuery] string mood, [FromQuery] string? username)
     {
+        // 1. Mapowanie wybranego "nastroju" na konkretne tagi i gatunki literackie, z których korzysta API
         var keywords = mood.ToLower() switch
         {
             "relax" => new List<string> { "romance", "humor", "comedy", "strength" },
@@ -55,8 +72,10 @@ public class BooksController : ControllerBase
             _ => new List<string> { "fiction" }
         };
 
+        // Pobieranie szerszej puli (40 najlepszych książek), żeby mieć z czego filtrować
         var allBooks = await _client.GetRecommendations(limit: 40);
 
+        // 2. Identyfikacja użytkownika - sprawdzamy, czy request pochodzi od zalogowanego usera
         string? activeUsername = null;
 
         if (!string.IsNullOrWhiteSpace(username) && username.Trim().ToLower() != "null" && username.Trim().ToLower() != "undefined")
@@ -74,6 +93,7 @@ public class BooksController : ControllerBase
 
         var userOwnedBookIds = new List<int>();
 
+        // 3. Zabezpieczenie przed polecaniem książek, które użytkownik już przeczytał lub ma na liście
         if (!string.IsNullOrEmpty(activeUsername))
         {
             var readingStatuses = await _booksdbRepository.GetUserReadingStatus(activeUsername);
@@ -83,11 +103,13 @@ public class BooksController : ControllerBase
                 .ToList();
         }
 
+        // 4. Zaawansowane filtrowanie i transformacja wyników
         var response = allBooks
             .Where(b => b.Id.HasValue) 
-            .Where(b => !userOwnedBookIds.Contains(b.Id.Value)) 
+            .Where(b => !userOwnedBookIds.Contains(b.Id.Value))
             .Select(b => 
             {
+                // Sprawdzamy, czy tagi książki pokrywają się ze słowami kluczowymi wybranego nastroju
                 var matchedTag = b.Cached_Tags?
                     .SelectMany(pair => pair.Value) 
                     .FirstOrDefault(t => t != null && !string.IsNullOrEmpty(t.Tag) && keywords.Contains(t.Tag.ToLower())); 
@@ -98,14 +120,16 @@ public class BooksController : ControllerBase
 
                 return new { Book = b, PrimaryGenre = primaryGenre, IsMatch = matchedTag != null };
             })
-            .OrderByDescending(x => x.IsMatch) 
-            .Take(10) 
+            .OrderByDescending(x => x.IsMatch) // Najlepsze dopasowania lądują na początku listy
+            .Take(10) // Ograniczamy ostateczny wynik do 10 książek
             .Select(x => 
             {
+                // Generowanie dynamicznego opisu
                 string reasonText = string.IsNullOrEmpty(activeUsername)
                     ? $"\"If you love the vibe of {x.PrimaryGenre} – this highly-rated pick from the {mood} section is an absolute must-read!\""
                     : $"\"Based on your interest in {x.PrimaryGenre} – you are looking for a story with a deeper atmosphere and tension.\"";
 
+                // Mapowanie na obiekt DTO wysyłany do klienta
                 return new RecommendationDto
                 {
                     Book_Id = x.Book.Id.Value,
@@ -128,11 +152,13 @@ public class BooksController : ControllerBase
         return Ok(userLists);
     }
 
+    // Pobiera pełną bibliotekę użytkownika
     [HttpGet("getUserReadingStatuses/{username}")]
     public async Task<IActionResult> GetUserReadingStatuses([FromRoute] string username)
     {
         var userReadingStatuses = await _booksdbRepository.GetUserReadingStatuses(username);
         var libraryItems = new List<UserLibraryItemDto>();
+        
         foreach (var status in userReadingStatuses)
         {
             var bookData = await _client.GetBookById(status.Book_Id);
@@ -151,6 +177,7 @@ public class BooksController : ControllerBase
         return Ok(libraryItems);
     }
 
+    // Pobiera złożone informacje dla panelu czytania
     [HttpPost("getReadingData")]
     public async Task<IActionResult> GetReadingData([FromBody] GetReadingDataRequest request)
     {
@@ -158,24 +185,31 @@ public class BooksController : ControllerBase
         {
             return NotFound("No reading status found for this book and user.");
         }
+        
         var data = await _booksdbRepository.GetBookReadingData(request.BookId, request.Username);
         var bookData = await _client.GetBookById(request.BookId);
+        
         if (bookData == null || bookData.Count == 0)
         {
             return NotFound("Book not found.");
         }
         data.bookData = bookData[0];
+        
         return Ok(data);
     }
 
+    // Główna funkcja zarządzająca statusem książki
     [HttpPut("addToReadingStatus")]
     public async Task<IActionResult> AddBookToReadingStatus([FromBody] AddToReadingStatusRequest request)
     {
+        // Obsługa statusów dodających/aktualizujących
         if (request.Status == "read" || request.Status == "reading" || request.Status == "wishlist" || request.Status == "abandoned")
         {
             var userLists = await _booksdbRepository.GetUserReadingStatus(request.Username);
             var existingEntry = userLists.FirstOrDefault(l => l.Book_Id == request.Book_Id);
+            
             await _booksdbRepository.AddToActivity(request.Username, request.Book_Title, request.Status);
+            
             if (existingEntry != null)
             {
                 await _booksdbRepository.UpdateReadingStatus(request.Username, request.Book_Id, request.Status, request.Progress);
@@ -189,6 +223,7 @@ public class BooksController : ControllerBase
         }
         else
         {
+            // Kasowanie książki z biblioteki usera
             await _booksdbRepository.RemoveBookFromReadingStatus(request.Username, request.Book_Id);
             await _booksdbRepository.AddToActivity(request.Username, request.Book_Title, "removed");
         }
@@ -209,7 +244,8 @@ public class BooksController : ControllerBase
         await _booksdbRepository.CreateSession(request.ReadingStatus_Id, request.Pages_Started, request.Pages_Finished, request.Duration_Minutes, request.Log_Date);
         return Ok("Session created!");
     }
-        [HttpPost("createNote")]
+    
+    [HttpPost("createNote")]
     public async Task<IActionResult> CreateNote([FromBody] CreateNoteRequest request)
     {
         await _booksdbRepository.CreateNote(request.ReadingStatus_Id, request.Note, request.Page_Number);

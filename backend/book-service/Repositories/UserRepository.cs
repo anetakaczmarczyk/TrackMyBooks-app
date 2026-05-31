@@ -1,6 +1,11 @@
 using Dapper;
 using book_service.Models;
-public class UserRepository
+using book_service.Repositories;
+
+namespace book_service.Repositories;
+
+// Repozytorium odpowiedzialne za zarządzanie profilami użytkowników, uwierzytelnianiem oraz rozbudowaną siecią społecznościową (znajomości).
+public class UserRepository : IUserRepository
 {
     private readonly DbConnectionFactory _db;
     public UserRepository(DbConnectionFactory db) => _db = db;
@@ -11,6 +16,9 @@ public class UserRepository
         var query = "INSERT INTO Users (name, username, email, password_hash, preferred_genres, bio, books_goal) VALUES (@Name, @Username, @Email, @Password_Hash, @Preferred_Genres, @Bio, @Books_Goal)";
         await connection.ExecuteAsync(query, user);
     }
+
+    // Wykorzystanie COUNT(1) i ExecuteScalarAsync pozwala błyskawicznie sprawdzić unikalność danych (loginu/emaila)
+    // przy minimalnym obciążeniu bazy danych
     public async Task<bool> CheckIfEmailIsTaken(string email)
     {
         using var connection = _db.CreateConnection();
@@ -18,6 +26,7 @@ public class UserRepository
         int count = await connection.ExecuteScalarAsync<int>(query, new { Email = email });
         return count > 0;
     }
+
     public async Task<bool> CheckIfUsernameIsTaken(string username)
     {
         using var connection = _db.CreateConnection();
@@ -25,6 +34,9 @@ public class UserRepository
         int count = await connection.ExecuteScalarAsync<int>(query, new { Username = username });
         return count > 0;
     }
+
+    // QuerySingleOrDefaultAsync zwraca dokładnie jeden rekord lub null
+    // Rzuca wyjątek, jeśli baza zwróciłaby więcej niż jeden wynik (zapewnia unikalność logowania)
     public async Task<User> GetUserByEmail(string email)
     {
         using var connection = _db.CreateConnection();
@@ -39,6 +51,7 @@ public class UserRepository
         await connection.ExecuteAsync(query, user);
     }
     
+    // Haszowanie nowego hasła (BCrypt) następuje na poziomie repozytorium przed wysłaniem polecenia UPDATE
     public async Task UpdatePassword(ChangePasswordRequest request)
     {
         using var connection = _db.CreateConnection();
@@ -61,10 +74,13 @@ public class UserRepository
         return await connection.QuerySingleOrDefaultAsync<User>(query, new { Username = username });
     }
     
+// Zamiast generować setki pojedynczych zapytań pobieramy 3 zbiorcze listy z bazy danych
+// i łączymy je bezpośrednio w pamięci serwera
 public async Task<IEnumerable<FriendWithBooksDto>> GetFriendsData(string username)
 {
     using var connection = _db.CreateConnection();
 
+    // Pobieramy relacje znajomości wraz ze stanem czytelnictwa znajomych
     var friendsQuery = @"
         SELECT 
             f.status AS FriendshipStatus,
@@ -84,6 +100,7 @@ public async Task<IEnumerable<FriendWithBooksDto>> GetFriendsData(string usernam
         WHERE (f.user1 = @Username OR f.user2 = @Username) 
           AND u.username != @Username";
 
+    // Pobieramy historie aktywności wszystkich znajomych w jednym zapytaniu
     var activityQuery = @"
         SELECT 
             ua.username AS Username,
@@ -96,6 +113,7 @@ public async Task<IEnumerable<FriendWithBooksDto>> GetFriendsData(string usernam
         WHERE (f.user1 = @Username OR f.user2 = @Username) 
           AND u.username != @Username";
 
+    // Pobieramy recenzje wszystkich znajomych w jednym zapytaniu
     var reviewQuery = @"
         SELECT 
             r.username AS Username,
@@ -111,10 +129,12 @@ public async Task<IEnumerable<FriendWithBooksDto>> GetFriendsData(string usernam
         WHERE (f.user1 = @Username OR f.user2 = @Username) 
           AND u.username != @Username";
 
+    // Asynchroniczne wywołanie wszystkich trzech zapytań SQL
     var friendRows = await connection.QueryAsync<RawFriendshipRow>(friendsQuery, new { Username = username });
     var activityRows = await connection.QueryAsync<RawActivityRow>(activityQuery, new { Username = username });
     var reviewRows = await connection.QueryAsync<RawReviewRow>(reviewQuery, new { Username = username });
 
+    // Tworzenie słowników przyspieszających wyszukiwanie powiązanych danych w pamięci
     var activitiesLookup = activityRows
         .GroupBy(a => a.Username)
         .ToDictionary(g => g.Key, g => g.ToList());
@@ -123,15 +143,17 @@ public async Task<IEnumerable<FriendWithBooksDto>> GetFriendsData(string usernam
         .GroupBy(r => r.Username)
         .ToDictionary(g => g.Key, g => g.ToList());
 
+    // Składanie końcowego obiektu DTO
     var result = friendRows
-        .GroupBy(r => new { r.FriendUsername, r.FriendName, r.FriendshipStatus, r.IsInitiator }) // ◄ Dodano IsInitiator do grupowania
+        .GroupBy(r => new { r.FriendUsername, r.FriendName, r.FriendshipStatus, r.IsInitiator }) // Grupowanie po znajomym
         .Select(g => new FriendWithBooksDto
         {
             Username = g.Key.FriendUsername,
             Name = g.Key.FriendName,
             FriendshipStatus = g.Key.FriendshipStatus,
-            IsInitiator = g.Key.IsInitiator, // ◄ Przypisujemy do końcowego DTO
+            IsInitiator = g.Key.IsInitiator, 
             
+            // Mapowanie statusów książek, odfiltrowując puste wiersze powstałe przy LEFT JOIN
             ReadingStatuses = g
                 .Where(r => r.StatusId != null) 
                 .Select(r => new FriendReadingStatusDto
@@ -144,6 +166,7 @@ public async Task<IEnumerable<FriendWithBooksDto>> GetFriendsData(string usernam
                     End_Date = r.EndDate
                 }).ToList(),
 
+            // Pobieranie aktywności ze słownika pamięci podręcznej
             Activities = activitiesLookup.ContainsKey(g.Key.FriendUsername)
                 ? activitiesLookup[g.Key.FriendUsername].Select(a => new FriendActivityDto
                   {
@@ -153,6 +176,7 @@ public async Task<IEnumerable<FriendWithBooksDto>> GetFriendsData(string usernam
                   }).ToList()
                 : new List<FriendActivityDto>(),
 
+            // Pobieranie recenzji ze słownika pamięci podręcznej
             Reviews = reviewsLookup.ContainsKey(g.Key.FriendUsername)
                 ? reviewsLookup[g.Key.FriendUsername].Select(r => new FriendReviewDto
                   {
@@ -174,6 +198,7 @@ public async Task<IEnumerable<FriendWithBooksDto>> GetFriendsData(string usernam
     {
         using var connection = _db.CreateConnection();
         string query;
+        // Zaakceptowanie zaproszenia zmienia status, odrzucenie całkowicie kasuje wiersz z bazy danych
         if (request.Accept)
         {
             query = @"
@@ -197,6 +222,7 @@ public async Task<IEnumerable<FriendWithBooksDto>> GetFriendsData(string usernam
     public async Task RemoveFriend(SendInvitationRequest request)
     {
         using var connection = _db.CreateConnection();
+        // Usunięcie znajomego usuwa powiązanie w tabeli Friendships w obie strony
         var query = @"
             DELETE FROM Friendships 
             WHERE (user1 = @UserUsername AND user2 = @FriendUsername) 
@@ -210,6 +236,7 @@ public async Task<IEnumerable<FriendWithBooksDto>> GetFriendsData(string usernam
     {
 
         using var connection = _db.CreateConnection();
+        // Nowe zaproszenie domyślnie otrzymuje status oczekujący ('pending') ustawiany na poziomie bazy danych
         var query = "INSERT INTO Friendships (user1, user2) VALUES (@UserUsername, @FriendUsername)";
         await connection.ExecuteAsync(query, new { UserUsername = request.UserUsername, FriendUsername = request.FriendUsername });
     }

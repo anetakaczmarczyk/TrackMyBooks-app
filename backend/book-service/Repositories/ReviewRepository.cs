@@ -1,10 +1,15 @@
 using Dapper;
+using book_service.Repositories;
 
-public class ReviewRepository
+namespace book_service.Repositories;
+
+// Repozytorium odpowiedzialne za operacje bazodanowe związane z recenzjami i ocenami książek
+public class ReviewRepository : IReviewRepository
 {
     private readonly DbConnectionFactory _db;
     public ReviewRepository(DbConnectionFactory db) => _db = db;
 
+    // Pobiera wszystkie opinie o danej książce, sortując je chronologicznie od najnowszych
     public async Task<IEnumerable<Review>> GetReviewsForBook(int bookId)
     {
         using var connection = _db.CreateConnection();
@@ -15,6 +20,7 @@ public class ReviewRepository
     public async Task AddReview(Review review)
     {
         using var connection = _db.CreateConnection();
+        // Funkcja TRIM() w SQL oczyszcza tekst recenzji ze zbędnych spacji i znaków nowej linii na początku oraz końcu tekstu
         var query = "INSERT INTO Reviews (Book_Id, Username, Rating, Review_Text) VALUES (@Book_Id, @Username, @Rating, TRIM(@Review_Text))";
         await connection.ExecuteAsync(query, review);
     }
@@ -22,10 +28,12 @@ public class ReviewRepository
     public async Task UpdateReview(int id, Review review)
     {
         using var connection = _db.CreateConnection();
+        // Podczas edycji recenzji, ręcznie wymuszamy aktualizację kolumny Timestamp
         var query = "UPDATE Reviews SET Rating = @Rating, Review_Text = TRIM(@Review_Text), Timestamp = CURRENT_TIMESTAMP WHERE Id = @Id";
         await connection.ExecuteAsync(query, new { review.Rating, review.Review_Text, Id = id });
     }
 
+    // Pobiera najnowsze opinie napisane przez danego użytkownika. 
     public async Task<IEnumerable<Review>> GetReviewsByUsername(string username)
     {
         using var connection = _db.CreateConnection();

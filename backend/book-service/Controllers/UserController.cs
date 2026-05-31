@@ -3,21 +3,23 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 using book_service.Services;
 using book_service.Models;
 using System.Text;
+using book_service.Repositories;
+
+namespace book_service.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 public class UserController : ControllerBase
 {
-    private readonly UserRepository _userRepository;
-    private readonly BooksdbRepository _booksdbRepository;
-    private readonly ReviewRepository _reviewRepository;
+    private readonly IUserRepository  _userRepository;
+    private readonly IBooksdbRepository _booksdbRepository;
+    private readonly IReviewRepository _reviewRepository;
     private readonly HardcoverClient _client;
 
-    public UserController(UserRepository userRepository, BooksdbRepository booksdbRepository, ReviewRepository reviewRepository, HardcoverClient client)
+    public UserController(IUserRepository  userRepository, IBooksdbRepository booksdbRepository, IReviewRepository reviewRepository, HardcoverClient client)
     {
         _userRepository = userRepository;
         _booksdbRepository = booksdbRepository;
@@ -25,6 +27,7 @@ public class UserController : ControllerBase
         _client = client;
     }
 
+    // Tworzenie tokena JWT przeznaczonego do bezstanowej weryfikacji tożsamości użytkownika
     private string GenerateJwtToken(User user)
     {
         var claims = new List<Claim>
@@ -32,7 +35,8 @@ public class UserController : ControllerBase
             new Claim(ClaimTypes.Email, user.Email),
             new Claim(ClaimTypes.Name, user.Username)
         };
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("p4#K9v&L2m@B8xZ!qR7nN#yP5cW1jF6sD3eH0aV4uY0gT")); // Example key, replace with your actual key, safe to store in a secure location
+        // Klucz symetryczny używany do podpisywania tokena w celu weryfikacji jego integralności
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("p4#K9v&L2m@B8xZ!qR7nN#yP5cW1jF6sD3eH0aV4uY0gT")); 
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256Signature);
         var tokenDescriptor = new SecurityTokenDescriptor
         {
@@ -46,6 +50,7 @@ public class UserController : ControllerBase
     }
     
 
+    // Pobieranie danych aktualnie zalogowanego użytkownika na podstawie tożsamości zdekodowanej z tokena JWT
     [Authorize]
     [HttpGet("me")]
     public async Task<IActionResult> GetCurrentUser()
@@ -65,6 +70,7 @@ public class UserController : ControllerBase
         return Ok(user);
     }
 
+    // Bezpieczne wylogowanie poprzez usunięcie ciasteczka z tokenem JWT
     [HttpPost("logout")]
     public IActionResult Logout()   
     {
@@ -77,6 +83,7 @@ public class UserController : ControllerBase
         return Ok();
     }
 
+    // Rejestracja użytkownika
     [HttpPost("createUser")]
     public async Task<IActionResult> CreateUser([FromBody] User user)
     {   
@@ -85,6 +92,7 @@ public class UserController : ControllerBase
         await _userRepository.CreateUser(user);
         return Ok("User created!");
     }
+
     [HttpGet("checkIfEmailIsTaken/{email}")]
     public async Task<IActionResult> CheckIfEmailIsTaken([FromRoute] string email)
     {
@@ -95,6 +103,7 @@ public class UserController : ControllerBase
         var userExists = await _userRepository.CheckIfEmailIsTaken(email);
         return Ok(new { taken = userExists });
     }
+
     [HttpGet("checkIfUsernameIsTaken/{username}")]
     public async Task<IActionResult> CheckIfUsernameIsTaken([FromRoute] string username)
     {
@@ -106,6 +115,7 @@ public class UserController : ControllerBase
         return Ok(new { taken = userExists });
     }
 
+    // Proces logowania: weryfikacja danych, generowanie JWT oraz zapis do bezpiecznego ciasteczka HTTP-Only
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
@@ -116,6 +126,9 @@ public class UserController : ControllerBase
         }
 
         var token = GenerateJwtToken(user);
+        
+        // Ciasteczko HttpOnly chroni przed kradzieżą tokena przez skrypty JS (ochrona przed XSS).
+        // SameSite=Strict zabezpiecza aplikację przed atakami CSRF.
         var cookieOptions = new CookieOptions
         {
             HttpOnly = true,
@@ -138,6 +151,7 @@ public class UserController : ControllerBase
         return Ok("User updated!");
     }
 
+    // Zmiana hasła - wymaga podania i poprawnej weryfikacji dotychczasowego hasła
     [HttpPost("changePassword")]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
     {
@@ -150,6 +164,7 @@ public class UserController : ControllerBase
         return Ok("Password updated!");
     }
 
+    // Usunięcie konta - potrójne zabezpieczenie: istnienie usera, weryfikacja hasła oraz ręczne wpisanie frazy potwierdzającej
     [HttpPost("delete")]
     public async Task<IActionResult> DeleteAccount([FromBody] DeleteAccountRequest request)
     {
@@ -160,7 +175,7 @@ public class UserController : ControllerBase
             return Unauthorized("Invalid password");
         }
         await _userRepository.DeleteUser(request);
-        Logout();
+        Logout(); // Automatyczne unieważnienie sesji (ciasteczka) po usunięciu konta
         return Ok("Account deleted!");
     }
 
@@ -175,6 +190,7 @@ public class UserController : ControllerBase
         return Ok(friends);
     }
 
+    // Logika wysyłania zaproszeń do znajomych z walidacją potencjalnych błędów
     [HttpPost("sendInvitation")]
     public async Task<IActionResult> SendInvitation([FromBody] SendInvitationRequest request)
     {
@@ -227,6 +243,8 @@ public class UserController : ControllerBase
         return Ok("Friend removed!");
     }
 
+    // Pobieranie kompletnego publicznego profilu innego użytkownika
+    // Agreguje dane z bazy (recenzje, aktywność, półki) i uzupełnia je o dane książek pobrane w locie z zewnętrznego API (Hardcover)
     [HttpGet("{username}")]
     public async Task<IActionResult> GetUserByUsername([FromRoute] string username)
     {
@@ -266,8 +284,9 @@ public class UserController : ControllerBase
         return Ok(new { user, reviews, recentActivity, libraryItems });
     }
 
+    // Pobiera uproszczoną paczkę danych niezbędną do zasilenia głównego pulpitu (Dashboard) zalogowanego użytkownika
     [HttpGet("getDashboardData/{username}")]
-        public async Task<IActionResult> GetDashboardData([FromRoute] string username)
+    public async Task<IActionResult> GetDashboardData([FromRoute] string username)
     {
         var userReviews = await _reviewRepository.GetReviewsByUsername(username);
         var friendsData = await _userRepository.GetFriendsData(username);

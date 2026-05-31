@@ -12,8 +12,7 @@ import { LibraryItem } from "@/_components/LibraryItem";
 import { Activity } from "@/_components/Activity";
 
 
-
-
+// Dostępne sekcje zakładek profilowych
 const PROFILE_TABS = ["Recent", "Reviews", "Activity"];
 
 function Stars({ n }: { n: number }) {
@@ -31,6 +30,7 @@ export default function ProfilePage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
+    // Wykorzystanie "use(params)", aby asynchronicznie wyciągnąć parametry trasy dynamicznej
     const { slug } = use(params);
     const { user, loading: authLoading, refreshUser } = useAuth();
     const router = useRouter();
@@ -42,12 +42,17 @@ export default function ProfilePage({
     const [recentActivity, setRecentActivity] = useState<Activity[]>([]);
     const [readingStatuses, setReadingStatuses] =   useState<LibraryItem[]>([]);
 
+    // Blokada dla użytkowników niezalogowanych
     useEffect(() => {
         if (!authLoading && !user) router.push("/");
     }, [user, authLoading, router]);
 
+    // Pobieranie profilu użytkownika na podstawie slug z adresu URL
     useEffect(() => {
+        // Porównujemy zalogowanego użytkownika (user.username) ze slugiem w adresie URL
+        // Jeśli to ta sama osoba, odblokowujemy przyciski edycji i ustawień (editing === true)
         if (user?.username === slug) setEditing(true);
+        
         const getUserProfile = async () => {
             const res = await fetch(`http://localhost:5000/api/user/${slug}`);
             if (res.ok) {
@@ -58,7 +63,8 @@ export default function ProfilePage({
                 setReadingStatuses(data.libraryItems);
             }
             else if (res.status === 404) {
-                router.push("/profile");
+                // Jeśli profil w bazie nie istnieje, przekierowujemy na stronę główną
+                router.push("/");
             }
     }
     getUserProfile();
@@ -103,6 +109,8 @@ export default function ProfilePage({
               <p className="profile-bio">
                 {userData?.bio}
               </p>
+              
+              {/* Mapowanie listy ulubionych gatunków, które w bazie zapisane są jako jeden string rozdzielany przecinkami */}
               <div className="profile-chips">
                 {userData?.preferred_Genres.split(",").map(g => (
                   <span className="profile-chip" key={g}>
@@ -140,6 +148,7 @@ export default function ProfilePage({
           ))}
         </div>
 
+        {/* ZAKŁADKA 1: Podsumowanie */}
         {tab === "Recent" && (
           <div className="profile-content">
             <div className="stats-grid-2">
@@ -148,6 +157,7 @@ export default function ProfilePage({
                 <div className="profile-books-row">
                   {readingStatuses
                   .filter(s => s.status === "read")
+                  // Sortujemy książki po dacie zakończenia czytania chronologicznie
                   .sort((a, b) => new Date(b.end_Date || "").getTime() - new Date(a.end_Date || "").getTime())
                   .slice(0, 5)
                   .map(b => {
@@ -178,6 +188,7 @@ export default function ProfilePage({
         )}
 
 
+        {/* ZAKŁADKA 2: Wykaz napisanych przez tego użytkownika recenzji */}
         {tab === "Reviews" && (
           <div className="profile-content">
             <div className="reviews-list">
@@ -200,12 +211,14 @@ export default function ProfilePage({
 
 
 
+        {/* ZAKŁADKA 3: Historia aktywności powiązanej bezpośrednio z profilem */}
         {tab === "Activity" && (
           <div className="profile-content">
             <div className="activity-feed">
               {recentActivity.map((a, i) => (
                 <div className="activity-row" key={i}>
                   <span className="activity-icon">📝</span>
+                  {/* Inteligentna personalizacja: jeśli przeglądamy własny profil, w strumieniu aktywności wyświetlamy zaimek "You" zamiast loginu */}
                   <span className="activity-text">{user?.username?.toLowerCase() === slug?.toLowerCase() ? "You" : slug} {a.activity_Type} {a.book_Title}</span>
                 <span className="activity-time">{formatTimeAgo(a.timestamp)}</span>
                 </div>

@@ -2,7 +2,15 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
     images: {
-    domains: ['covers.openlibrary.org'],
+      domains: ['covers.openlibrary.org'],
+      remotePatterns: [
+        {
+          protocol: 'https',
+          hostname: 'assets.hardcover.app',
+          port: '',
+          pathname: '/**',
+        },
+      ],
   },
   compiler: {
     styledComponents: true,

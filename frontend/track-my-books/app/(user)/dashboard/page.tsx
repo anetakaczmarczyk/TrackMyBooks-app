@@ -10,39 +10,10 @@ import { Review } from "@/_components/Review";
 import { LibraryItem } from "@/_components/LibraryItem";
 import { FriendsData } from "@/_components/Friends";
 
-/* ── Types ── */
-interface ReadingBook {
-  id: string;
-  title: string;
-  author: string;
-  cover: string;
-  progress: number;
-  pages: number;
-}
-
-interface ActivityItem {
-  id: string;
-  type: "finished" | "started" | "rated" | "reviewed";
-  bookTitle: string;
-  friendName: string;
-  friendInitials: string;
-  time: string;
-}
-
-interface DashboardStats {
-  booksRead: number;
-  pagesThisWeek: number;
-  currentStreak: number;
-  avgRating: number;
-  readingGoal: number;
-  readingGoalProgress: number;
-}
-
-
-/* ── Helpers ── */
+// Komponent ProgressRing rysuje kołowy wskaźnik postępu (radial progress) przy użyciu czystego SVG
 function ProgressRing({ pct }: { pct: number }) {
   const r = 28;
-  const circ = 2 * Math.PI * r;
+  const circ = 2 * Math.PI * r; // Obliczanie obwodu koła
   return (
     <svg width="70" height="70" viewBox="0 0 70 70">
       <circle cx="35" cy="35" r={r} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="4" />
@@ -51,9 +22,10 @@ function ProgressRing({ pct }: { pct: number }) {
         fill="none"
         stroke="var(--gold)"
         strokeWidth="4"
+        // strokeDasharray decyduje o tym, jaka część obwodu koła ma zostać narysowana
         strokeDasharray={`${(pct / 100) * circ} ${circ}`}
         strokeLinecap="round"
-        transform="rotate(-90 35 35)"
+        transform="rotate(-90 35 35)" // Obrót o -90 stopni, aby wskaźnik zaczynał napełniać się od samej góry
         style={{ transition: "stroke-dasharray 0.6s ease" }}
       />
       <text x="35" y="40" textAnchor="middle" fill="var(--gold-light)" fontSize="13" fontWeight="600">
@@ -63,40 +35,22 @@ function ProgressRing({ pct }: { pct: number }) {
   );
 }
 
-/* ── MOCK data for when API isn't ready ── */
-const MOCK_STATS: DashboardStats = {
-  booksRead: 11, pagesThisWeek: 214,
-  currentStreak: 7, avgRating: 4.6,
-  readingGoal: 24, readingGoalProgress: 11,
-};
-const MOCK_READING: ReadingBook[] = [
-  { id: "1", title: "Dune", author: "Frank Herbert", cover: "https://covers.openlibrary.org/b/id/8758191-L.jpg", progress: 62, pages: 688 },
-  { id: "2", title: "Babel", author: "R. F. Kuang",  cover: "https://covers.openlibrary.org/b/id/13066421-L.jpg", progress: 31, pages: 545 },
-];
-const MOCK_ACTIVITY: ActivityItem[] = [
-  { id: "1", type: "finished", bookTitle: "Project Hail Mary", friendName: "Marta K.",  friendInitials: "MK", time: "2h ago"        },
-  { id: "2", type: "rated",    bookTitle: "1984",               friendName: "Anna S.",   friendInitials: "AS", time: "yesterday"     },
-  { id: "3", type: "started",  bookTitle: "Sea of Tranquility", friendName: "Piotr W.",  friendInitials: "PW", time: "2 days ago"    },
-  { id: "4", type: "reviewed", bookTitle: "Foundation",         friendName: "Tomasz N.", friendInitials: "TN", time: "3 days ago"    },
-];
 
 
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
 
-  const [stats, setStats]           = useState<DashboardStats>(MOCK_STATS);
   const [reading, setReading]       = useState<LibraryItem[]>([]);
-  const [activity, setActivity]     = useState<ActivityItem[]>(MOCK_ACTIVITY);
-  const [dataLoading, setDataLoading] = useState(false);
   const [reviews, setReviews] = useState<Review[]>([])
   const [friendsData, setFriendsData] = useState<FriendsData[]>([])
 
+  // Jeśli sesja się załadowała (authLoading === false) i użytkownik nie jest zalogowany, przekierowujemy go na stronę główną.
   useEffect(() => {
     if (!authLoading && !user) router.push("/");
   }, [user, authLoading, router]);
 
-  // Load dashboard data
+  // Pobieranie skonsolidowanych danych niezbędnych dla zasilenia pulpitu użytkownika
   useEffect(() => {
     const getDashboardData = async() => {
           const res = await fetch(`http://localhost:5000/api/user/getDashboardData/${user?.username}`, {
@@ -104,7 +58,7 @@ export default function DashboardPage() {
           headers: {
               "Content-Type": "application/json"
           },
-          credentials: "include",
+          credentials: "include", // Przesyłanie ciasteczka HttpOnly z tokenem JWT w zapytaniu cross-origin
       });
       if (!res.ok) {
           console.error("Failed to put session data");
@@ -118,6 +72,7 @@ export default function DashboardPage() {
     getDashboardData();
   }, [user]);
 
+  // Stan przejściowy - unika migotania i "przeskoków" layoutu (CLS), zanim sprawdzimy stan zalogowania
   if (authLoading || !user) {
     return (
       <><Navbar />
@@ -129,8 +84,9 @@ export default function DashboardPage() {
     );
   }
 
-  const goalPct = Math.round((stats.readingGoalProgress / stats.readingGoal) * 100);
   const initials = user.name.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase();
+
+  // Pomocnicza funkcja przeliczająca czas na zapis relatywny
   function formatTimeAgo(timestamp: string | Date) {
       const ms = Date.now() - new Date(timestamp+"Z").getTime();
       const seconds = Math.floor(ms / 1000);
@@ -188,7 +144,7 @@ export default function DashboardPage() {
           {/* ── LEFT COLUMN ── */}
           <div className="dashboard-left">
 
-            {/* Currently reading */}
+            {/* Listowanie aktualnie czytanych książek */}
             <div className="stats-card">
               <div className="section-header-row" style={{ marginBottom: 20 }}>
                 <h2 className="stats-card-title" style={{ marginBottom: 0 }}>Currently Reading</h2>
@@ -240,7 +196,9 @@ export default function DashboardPage() {
               )}
             </div>
 
-            {/* Friends activity */}
+            {/* Strumień aktywności znajomych (Activity Feed) */}
+            {/* Łączymy listy aktywności wszystkich zaakceptowanych znajomych */}
+            {/* sortujemy je chronologicznie od najnowszych i wyświetlamy tylko 4 ostatnie wpisy */}
             <div className="stats-card">
               <div className="section-header-row" style={{ marginBottom: 20 }}>
                 <h2 className="stats-card-title" style={{ marginBottom: 0 }}>Friends Activity</h2>
@@ -276,7 +234,7 @@ export default function DashboardPage() {
           {/* ── RIGHT COLUMN ── */}
           <div className="dashboard-right">
 
-            {/* Reading goal */}
+            {/* Sekcja postępu rocznego celu czytelniczego */}
             <div className="stats-card">
               <h2 className="stats-card-title">Reading Goal 2026</h2>
               <div className="dashboard-goal">
@@ -295,11 +253,11 @@ export default function DashboardPage() {
                 </div>
               </div>
               <div className="goal-track" style={{ marginTop: 16 }}>
-                <div className="goal-fill" style={{ width: `${goalPct}%` }} />
+                <div className="goal-fill" style={{ width: `${Math.round(reading.filter(r => r.status == 'read').length / (user?.books_Goal == 0? 1 : user?.books_Goal) * 100)}%` }} />
               </div>
             </div>
 
-            {/* Quick links */}
+            {/* Skróty ułatwiające nawigację na urządzeniach mobilnych */}
             <div className="stats-card">
               <h2 className="stats-card-title">Quick Links</h2>
               <div className="dashboard-quick-links">

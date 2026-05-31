@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Navbar } from "@/_components/Navbar";
 import { BookByIdResponse, GenreTag } from "@/_components/bookInterface";
 import { useAuth } from "@/_context/AuthContext";
@@ -39,26 +39,32 @@ export default function BookDetail({ bookbyId, reviews }: { bookbyId: BookByIdRe
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
 
-  // ── Status ──
+  // ── Zarządzanie Statusem  ──
+  // Dwuetapowa zmiana statusu. Przechowujemy stan aktualnie zapisany w bazie (savedStatus)
+  // oraz stan zmieniony przez kliknięcie usera, czekający na zapis (pendingStatus).
+  // Porównanie tych zmiennych (hasStatusChange) decyduje o warunkowym wyświetleniu paska "Save / Cancel".
   const [savedStatus, setSavedStatus]     = useState<string | null>(null);
   const [pendingStatus, setPendingStatus] = useState<string | null>(null);
   const [isSavingStatus, setIsSavingStatus] = useState(false);
   const hasStatusChange = pendingStatus !== savedStatus;
 
 
-  // ── Reviews ──
+  // ── Recenzje i Oceny ──
   const [progress, setProgress]       = useState(0);
   const [userRating, setUserRating]   = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [reviewText, setReviewText]   = useState("");
   const [activeTab, setActiveTab]     = useState("opis");
 
+  // Wyliczanie średniej oceny książki wystawionej przez użytkowników naszego serwisu
   const reviewsRating = reviews?.length > 0
     ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
     : "N/A";
 
+  // Sprawdzamy, czy aktualnie zalogowany użytkownik dodał już wcześniej recenzję tej książki
   const userReview = reviews?.find(r => r.username === user?.username);
 
+  // Pobranie z bazy statusu danej książki dla zalogowanego użytkownika
   useEffect(() => {
     if (user && !authLoading) {
       const fetchStatus = async () => {
@@ -78,6 +84,7 @@ export default function BookDetail({ bookbyId, reviews }: { bookbyId: BookByIdRe
     }
   }, [user, authLoading, bookbyId.book.default_Physical_Edition_Id]);
 
+  // Jeśli użytkownik napisał już wcześniej recenzję, automatycznie uzupełniamy nią formularz
   useEffect(() => {
     if (userReview) {
       setUserRating(userReview.rating);
@@ -87,14 +94,15 @@ export default function BookDetail({ bookbyId, reviews }: { bookbyId: BookByIdRe
 
 
 
-  // ── Handlers statusu ──
   const handleStatusClick = (id: string) => {
     setPendingStatus(prev => prev === id ? null : id);
   };
 
+  // Zapisanie wybranego statusu w bazie danych
   const saveStatus = async () => {
     setIsSavingStatus(true);
     let progress = 0;
+    // Jeśli status zmienia się na "Przeczytane" (read), automatycznie oznaczamy postęp jako maksymalny
     if (pendingStatus === "read") progress = bookbyId.book.pages;
     try {
       await fetch("http://localhost:5000/api/books/addToReadingStatus", {
@@ -117,7 +125,6 @@ export default function BookDetail({ bookbyId, reviews }: { bookbyId: BookByIdRe
     }
   };
 
-  // ── Reviews ──
   const addReview = async () => {
     if (!user) return;
     try {
@@ -152,6 +159,7 @@ export default function BookDetail({ bookbyId, reviews }: { bookbyId: BookByIdRe
     }
   };
 
+  // Zakładka Series generuje się dynamicznie tylko w przypadku, gdy książka z zewnętrznego API jest częścią sagi/cyklu
   let tabs = ["opis", "recenzje", "szczegóły"];
   if (bookbyId.book.book_Series.length > 0) tabs.push("seria");
 
@@ -203,7 +211,7 @@ export default function BookDetail({ bookbyId, reviews }: { bookbyId: BookByIdRe
 
             {user && (
               <>
-                {/* ── Statuses ── */}
+                {/* ── Statusy ── */}
                 <div className="bdh-status-group">
                   {STATUSES.map(s => (
                     <button
@@ -266,7 +274,7 @@ export default function BookDetail({ bookbyId, reviews }: { bookbyId: BookByIdRe
 
         <div className="book-detail-body">
 
-          {/* ── Description ── */}
+          {/* ── Opis ── */}
           {activeTab === "opis" && (
             <div className="book-detail-main">
               <div className="bd-description">
@@ -284,7 +292,7 @@ export default function BookDetail({ bookbyId, reviews }: { bookbyId: BookByIdRe
             </div>
           )}
 
-          {/* ── Reviews ── */}
+          {/* ── Recenzje i interaktywne gwiazdki ── */}
           {activeTab === "recenzje" && (
             <div className="book-detail-main">
               <div className="bd-rating-summary">
@@ -308,6 +316,7 @@ export default function BookDetail({ bookbyId, reviews }: { bookbyId: BookByIdRe
 
               {user ? (
                 <>
+                  {/* Wybór oceny z dynamicznym podświetleniem */}
                   <div className="bd-your-rating">
                     <span className="bd-your-rating-label">Your Rating</span>
                     <div className="bd-star-picker">
@@ -338,6 +347,8 @@ export default function BookDetail({ bookbyId, reviews }: { bookbyId: BookByIdRe
                         onChange={e => setReviewText(e.target.value)}
                         rows={5}
                       />
+                      {/* Jeśli opinia usera już istnieje w tablicy reviews, */}
+                      {/* podmieniamy tekst przycisku i wywołujemy PUT zamiast tworzyć kolejną recenzję */}
                       {userReview ? (
                         <button
                           className="btn-submit"
@@ -386,7 +397,7 @@ export default function BookDetail({ bookbyId, reviews }: { bookbyId: BookByIdRe
             </div>
           )}
 
-          {/* ── Details ── */}
+          {/* ── Szczegóły techniczne ── */}
           {activeTab === "szczegóły" && (
             <div className="book-detail-main">
               <div className="bd-details-table">
@@ -409,7 +420,7 @@ export default function BookDetail({ bookbyId, reviews }: { bookbyId: BookByIdRe
             </div>
           )}
 
-          {/* ── Series ── */}
+          {/* ── Seria wydawnicza ── */}
           {activeTab === "seria" && (
             <div className="book-detail-main">
               <div className="bd-series-header">

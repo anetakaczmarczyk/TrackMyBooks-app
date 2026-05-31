@@ -2,24 +2,17 @@
 
 import { useEffect } from "react";
 import { useState } from "react";
-import Link from "next/link";
 import {Navbar} from "@/_components/Navbar";
 import { useAuth } from "@/_context/AuthContext";
 import { useRouter } from "next/navigation";
 
+// Definicja zakładek w panelu ustawień
 const SETTING_TABS = [
   { id: "konto",         icon: "👤", label: "Account"              },
   { id: "haslo",         icon: "🔒", label: "Password & Security" },
   { id: "usuniecie",     icon: "⚠️", label: "Delete Account"         },
 ];
 
-function Toggle({ on, onChange }: { on: boolean; onChange: () => void }) {
-  return (
-    <button className={`settings-toggle ${on ? "on" : ""}`} onClick={onChange}>
-      <span className="settings-toggle-thumb" />
-    </button>
-  );
-}
 
 function SettingsRow({ label, sub, children }: { label: string; sub?: string; children: React.ReactNode }) {
   return (
@@ -40,30 +33,35 @@ export default function SettingsPage() {
   const [tab, setTab] = useState("konto");
   const [passwdChanged, setPasswdChanged] = useState(false);
 
+  // Stany lokalne formularza ustawień konta
   const [displayName, setDisplayName] = useState("");
   const [handle, setHandle]           = useState("");
-  const [email, setEmail]             = useState("");
+  const [email, setEmail]             =             useState("");
   const [bio, setBio]                 = useState("");
   const [booksGoal, setBooksGoal]         = useState(0);
   const [savedKonto, setSavedKonto]   = useState(false);
 
+  // Stany formularza usuwania konta
   const [deletePassword, setDeletePassword] = useState("");
   const [deleteConformation, setDeleteConformation] = useState("");
 
+  // Stany błędów dla poszczególnych sekcji
   const [fetchError, setFetchError]   = useState("");
   const [passwdError, setPasswdError]     = useState("");
   const [deleteError, setDeleteError] = useState("");
 
-
+  // Stany zmiany hasła
   const [currPass, setCurrPass]   = useState("");
   const [newPass, setNewPass]     = useState("");
   const [confPass, setConfPass]   = useState("");
   const [showP, setShowP]         = useState(false);
 
+  // Ochrona ścieżki przed niezalogowanymi użytkownikami
   useEffect(() => {
     if (!authLoading && !user) router.push("/");
   }, [user, authLoading, router]);
 
+  // Przypisanie danych aktualnie zalogowanego użytkownika (z globalnego kontekstu AuthContext) do lokalnego stanu formularza
   useEffect(() => {
     if (user) {
       setDisplayName(user.name || ""); 
@@ -85,6 +83,7 @@ export default function SettingsPage() {
     );
   }
 
+  // Zapisywanie zaktualizowanych danych użytkownika
   const changeData = async() => {
     try{
       const res = await fetch("http://localhost:5000/api/user/update", {
@@ -100,6 +99,8 @@ export default function SettingsPage() {
         if (!res.ok) {
           throw new Error("Failed to update account information.");
         }
+        // Po udanej aktualizacji w bazie danych wywołujemy refreshUser().
+        // Synchronizuje to globalny stan sesji na frontendzie, natychmiastowo aktualizując 
         await refreshUser?.();
         setSavedKonto(true);
         setTimeout(() => setSavedKonto(false), 3000);
@@ -156,14 +157,14 @@ export default function SettingsPage() {
     
   }
 
-
+  // Kalkulator siły hasła (Password Strength Meter) obliczany w czasie rzeczywistym.
   const strength = (() => {
     if (!newPass) return 0;
     let s = 1;
-    if (newPass.length >= 8) s++;
-    if (/[A-Z]/.test(newPass)) s++;
-    if (/[0-9]/.test(newPass)) s++;
-    if (/[^A-Za-z0-9]/.test(newPass)) s++;
+    if (newPass.length >= 8) s++; // Spełnienie minimalnej długości
+    if (/[A-Z]/.test(newPass)) s++; // Przynajmniej jedna wielka litera
+    if (/[0-9]/.test(newPass)) s++; // Przynajmniej jedna cyfra
+    if (/[^A-Za-z0-9]/.test(newPass)) s++; // Przynajmniej jeden znak specjalny
     return s;
   })();
   const strengthColor = ["", "#e05252", "#e09452", "#c9a84c", "#52b788"][strength];
@@ -183,7 +184,7 @@ export default function SettingsPage() {
 
         <div className="settings-layout">
 
-          {/* Sidebar */}
+          {/* Sidebar zakładek ustawień */}
           <aside className="settings-sidebar">
             {SETTING_TABS.map(t => (
               <button
@@ -197,7 +198,7 @@ export default function SettingsPage() {
             ))}
           </aside>
 
-          {/* Main content */}
+          {/* Główny kontener wybranej sekcji ustawień */}
           <div className="settings-main">
 
             {/* ── KONTO ── */}
@@ -219,6 +220,7 @@ export default function SettingsPage() {
                   <div className="field">
                     <label>Username</label>
                     <div className="input-wrap">
+                      {/* Nazwa użytkownika i adres email są unikalnymi kluczami identyfikującymi, stąd zablokowana możliwość edycji (disabled) */}
                       <input value={handle} disabled type="text" placeholder="@handle" />
                       <span className="input-icon" style={{ right: 14, fontSize: 12 }}>@</span>
                     </div>
@@ -277,6 +279,7 @@ export default function SettingsPage() {
                     <div className="input-wrap">
                       <input type={showP ? "text" : "password"} value={newPass} onChange={e => setNewPass(e.target.value)} placeholder="Minimum 8 characters" />
                     </div>
+                    {/* Renderowanie paska siły hasła na podstawie wyliczeń Regexa */}
                     {newPass && (
                       <div className="strength-bar" style={{ marginTop: 8 }}>
                         {[1,2,3,4].map(i => (
@@ -297,6 +300,7 @@ export default function SettingsPage() {
                       )}
                     </div>
                   </div>
+                  {/* Przycisk zmiany hasła jest wyłączony, dopóki hasła się nie zgadzają lub nowe hasło jest za słabe */}
                   <button className="btn-submit" style={{ maxWidth: 220 }} disabled={!currPass || !newPass || newPass !== confPass || strength < 2} onClick={changePassword}>
                     Change Password
                   </button>
@@ -309,7 +313,7 @@ export default function SettingsPage() {
 
 
 
-            {/* ── USUŃ KONTO ── */}
+            {/* ── USUŃ KONTO (DANGER ZONE) ── */}
             {tab === "usuniecie" && (
               <div className="settings-panel">
                 <h2 className="settings-panel-title" style={{ color: "#e05252" }}>Delete Account</h2>
@@ -321,6 +325,8 @@ export default function SettingsPage() {
                       <p>Deleting your account will permanently remove all your data — your bookshelf, reviews, statistics, and reading history. This cannot be undone.</p>
                     </div>
                   </div>
+                  
+                  {/* Podwójna weryfikacja intencji usunięcia konta: poprawne hasło + przepisanie frazy "DELETE ACCOUNT" */}
                   <div className="settings-field-group" style={{ marginTop: 24 }}>
                     <div className="field">
                       <label>Enter your password to confirm</label>

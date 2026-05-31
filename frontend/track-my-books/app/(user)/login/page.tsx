@@ -5,6 +5,7 @@ import Link from "next/dist/client/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+// Lista adresów URL okładek książek tworzących ozdobne tło (Book Wall) na lewym panelu
 const BG_BOOKS = [
   "https://covers.openlibrary.org/b/id/8231856-L.jpg",
   "https://covers.openlibrary.org/b/id/8758191-L.jpg",
@@ -31,6 +32,9 @@ export default function LoginPage() {
   const [remember, setRemember] = useState(false);
   const [focused, setFocused] = useState<string | null>(null);
 
+  // Jeśli użytkownik jest już zalogowany, automatycznie przekierowujemy go na pulpit (dashboard).
+  // Używamy router.replace() zamiast router.push(), aby usunąć ekran logowania z historii przeglądarki.
+  // Zapobiega to cofaniu się zalogowanego użytkownika do formularza logowania przyciskiem "Wstecz".
   useEffect(() => {
       if (!authLoading && user) router.replace("/dashboard");
     }, [user, authLoading, router]);
@@ -43,6 +47,7 @@ export default function LoginPage() {
     return null; 
   }
 
+  // Funkcja wywołująca API logowania
   const handleLogin = async () => {
     const res = await fetch("http://localhost:5000/api/user/login",{
       method: "POST",
@@ -50,6 +55,8 @@ export default function LoginPage() {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({ Email: email, Password: password, RememberMe: remember }),
+      // credentials: "include" nakazuje przeglądarce odebrać i zapisać ciasteczko autoryzacyjne (Set-Cookie: authToken)
+      // przesyłane z backendu (port 5000) do domeny frontendu (port 3000)
       credentials: "include"
     });
     if(res.ok){
@@ -105,6 +112,7 @@ export default function LoginPage() {
               <span className="divider-line" />
             </div>
 
+            {/* Stan "focused" pozwala dynamicznie aktywować podświetlenie ramek pól input w CSS po wejściu w nie */}
             <div
               className={`field ${focused === "email" ? "active" : ""}`}
             >
@@ -127,6 +135,7 @@ export default function LoginPage() {
             >
               <label>Password</label>
               <div className="input-wrap">
+                {/* Dynamiczna zmiana typu pola pozwala odsłonić lub zasłonić wpisane znaki */}
                 <input
                   type={showPass ? "text" : "password"}
                   placeholder="••••••••"

@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import {Navbar} from "@/_components/Navbar";
 import { useAuth } from "@/_context/AuthContext";
 import {Recommendation} from "@/_components/Recommendation";
 import Link from "next/link";
+
+// Definicje nastrojów, które po stronie backendu są mapowane na konkretne gatunki literackie i tagi
 const MOODS = [
   { id: "relax",     emoji: "🌿", label: "Relax",        desc: "Light and pleasant reading" },
   { id: "adventure", emoji: "⚔️",  label: "Adventure",      desc: "Action and epic worlds" },
@@ -25,9 +27,12 @@ export default function RecommendationsPage() {
         setUsername(user?.username || null);
     }, [user, authLoading,]);
 
+    // Reagowanie na zmianę nastroju (activeMood). Przy każdym kliknięciu innej karty nastroju,
+    // asynchronicznie dociągamy dopasowane rekomendacje z backendu
     useEffect(() => {
-        const getRecommendations = async() =>{
-
+        const getRecommendations = async() => {
+              // Przekazanie nazwy użytkownika (username) pozwala backendowi zidentyfikować posiadane przez niego książki
+              // i odrzucić je z wyników wyszukiwania, zapobiegając duplikatom rekomendacji
               const res = await fetch(`http://localhost:5000/api/books/getRecommendations?mood=${activeMood}&username=${username}`, {
                 method: "GET",
                 headers: {
@@ -80,12 +85,15 @@ export default function RecommendationsPage() {
           </div>
         </section>
 
+        {/* Sekcja wyników rekomendacji */}
         <section className="rec-section">
           <div className="section-header-row">
             <h2 className="section-heading">Selected for You</h2>
           </div>
           <div className="rec-cards">
             {recommendations?.map((r, i) => (
+              // Wykorzystanie indeksu tablicy "i" do dynamicznego przesunięcia opóźnienia animacji
+              // Sprawia to, że karty z książkami ujawniają się płynnie i elegancko jedna po drugiej.
               <div className="rec-card" key={i} style={{ animationDelay: `${i * 0.06}s` }}>
                 <div className="rec-card-inner">
                   <img src={r.imageUrl == "" ? undefined : r.imageUrl} alt={r.title} className="rec-cover" />

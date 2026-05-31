@@ -9,33 +9,7 @@ import { useToast } from "@/_hooks/useToast";
 import { useAuth } from "@/_context/AuthContext";
 import { useRouter } from "next/navigation";
 
-const MY_FRIENDS = [
-  { id: 1,  name: "Marta Kowalska",   handle: "@marta.czyta",    avatar: "MK", books: 34, mutual: 5,  online: true  },
-  { id: 2,  name: "Piotr Wiśniewski", handle: "@piotr_reads",    avatar: "PW", books: 18, mutual: 3,  online: false },
-  { id: 3,  name: "Anna Szymańska",   handle: "@ania.biblioteka", avatar: "AS", books: 61, mutual: 8,  online: true  },
-  { id: 4,  name: "Tomasz Nowak",     handle: "@tomek_sci_fi",   avatar: "TN", books: 27, mutual: 2,  online: false },
-];
-
-const SUGGESTIONS = [
-  { id: 5,  name: "Kasia Dąbrowska",  handle: "@kasia.fantasy",  avatar: "KD", books: 45, mutual: 6,  reason: "Czyta podobne gatunki" },
-  { id: 6,  name: "Marek Jabłoński",  handle: "@marek.klasyka",  avatar: "MJ", books: 92, mutual: 4,  reason: "Znajomy Marty K." },
-  { id: 7,  name: "Zosia Wróbel",     handle: "@zosia_books",    avatar: "ZW", books: 23, mutual: 1,  reason: "W Twojej okolicy" },
-  { id: 8,  name: "Bartek Lewandowski",handle:"@bartek.sci",      avatar: "BL", books: 38, mutual: 7,  reason: "Polubił te same książki" },
-];
-
-const REQUESTS = [
-  { id: 9,  name: "Ola Michalska",    handle: "@ola.reads",      avatar: "OM", books: 15, mutual: 2 },
-  { id: 10, name: "Rafał Kaczmarek",  handle: "@rafal.thriller",  avatar: "RK", books: 29, mutual: 5 },
-];
-
-const ACTIVITY = [
-  { avatar: "MK", name: "Marta K.",  action: 'finished reading', title: "Babel",             time: "2 hours ago" },
-  { avatar: "AS", name: "Anna S.",   action: 'rated',          title: "1984",               time: "yesterday"      },
-  { avatar: "PW", name: "Piotr W.",  action: 'added to list',   title: "Dune Messiah",       time: "2 days ago"   },
-  { avatar: "TN", name: "Tomasz N.", action: 'wrote review', title: "Foundation",         time: "3 days ago"   },
-  { avatar: "AS", name: "Anna S.",   action: 'started reading',   title: "Sea of Tranquility", time: "4 days ago"   },
-];
-
+// Definicja zakładek nawigacyjnych w panelu społecznościowym
 const TABS = ["My friends", "Invitations", "Pending", "Friends' Activity"];
 
 
@@ -46,29 +20,22 @@ export default function FriendsPage() {
 
   const [tab, setTab]         = useState("My friends");
   const [query, setQuery]     = useState("");
-  const [sent, setSent]       = useState<number[]>([]);
-  const [accepted, setAccepted] = useState<number[]>([]);
-  const [declined, setDeclined] = useState<number[]>([]);
   const [friendsData, setFriendsData] = useState<FriendsData[]>([]);
 
-  const [numberOfInvites, setNumberOfInvites] = useState(0);
 
+  // Przekierowanie niezalogowanych na stronę główną
   useEffect(() => {
     if (!authLoading && !user) router.push("/");
   }, [user, authLoading, router]);
 
-  useEffect(() => {
-    setNumberOfInvites(friendsData.filter(f => f.friendshipStatus === "pending").length);
-
-  }, [friendsData]);
-
+  // Pobieranie kompletnych informacji społecznościowych: znajomych, zaproszeń oraz ich aktywności
   useEffect(() => {
     const getFriendsData = async () => {
       const res = await fetch("http://localhost:5000/api/user/getFriendsData", {
         method: "GET",
         headers: {
           "Content-Type": "application/json"},
-        credentials: "include"
+        credentials: "include" // Przesyłanie ciasteczka HttpOnly z tokenem JWT
       });
       if (res.ok) {
         const data = await res.json();
@@ -80,6 +47,18 @@ export default function FriendsPage() {
     getFriendsData();
   }, [user]);
 
+  if (authLoading || !user) {
+    return (
+      <><Navbar />
+        <div className="inner-page books-loading">
+          <div className="books-loading-spinner" />
+          <p>Loading…</p>
+        </div>
+      </>
+    );
+  }
+
+  // Funkcja wysyłająca zaproszenie do innego użytkownika na podstawie nazwy profilu
   const sendInvitation = async() => {
     if (!query) {
       addToast("Please enter a username", "warning");
@@ -100,13 +79,14 @@ export default function FriendsPage() {
     if (response.ok) {
       addToast("Invitation sent!", "success");
       setQuery("");
-      await refreshUser?.();
+      await refreshUser?.(); // Odświeżenie sesji użytkownika, aby natychmiast zaktualizować interfejs
     } else {
       const message = await response.text();
       addToast(`Failed to send invitation: ${message}`, "error");
     }
   };
 
+  // Reakcja na zaproszenie przychodzące
   const respondToInvitation = async (friendUsername: string, accept: boolean) => {
     const response = await fetch("http://localhost:5000/api/user/respondToInvitation", {
       method: "POST",
@@ -118,7 +98,7 @@ export default function FriendsPage() {
     });
     if (response.ok) {
       addToast(`Invitation ${accept ? "accepted" : "declined"}!`, "success");
-      await refreshUser?.();
+      await refreshUser?.(); // Aktualizacja stanu aplikacji
     } else {
       const message = await response.text();
       addToast(`Failed to answer invitation: ${message}`, "error");
@@ -169,6 +149,7 @@ export default function FriendsPage() {
           <div>
             <div className="page-eyebrow"><span className="eyebrow-line" />Community<span className="eyebrow-line" /></div>
             <h1 className="page-title">Friends</h1>
+            {/* Szybkie wyliczenie liczby znajomych oraz oczekujących zaproszeń przy użyciu filtrów tablicy */}
             <p className="page-subtitle">{friendsData.filter(f => f.friendshipStatus === "accepted").length} friends · {friendsData.filter(f => f.friendshipStatus === "pending" && !f.isInitiator).length} invitations</p>
           </div>
           <div className="search-wrap">
@@ -183,6 +164,7 @@ export default function FriendsPage() {
           </div>
         </div>
 
+        {/* Dynamiczny pasek zakładek profilowych ze wskaźnikami liczby zaproszeń */}
         <div className="profile-tabs" style={{ marginBottom: 32 }}>
           {TABS.map(t => (
             <button
@@ -198,6 +180,7 @@ export default function FriendsPage() {
           ))}
         </div>
 
+        {/* ZAKŁADKA 1: Lista zaakceptowanych znajomych */}
         {tab === "My friends" && (
           <div className="friends-big-grid">
             {friendsData.filter(f => f.friendshipStatus === "accepted")
@@ -231,6 +214,7 @@ export default function FriendsPage() {
           </div>
         )}
 
+        {/* ZAKŁADKA 2: Zaproszenia przychodzące */}
         {tab === "Invitations" && (
           <div style={{ maxWidth: 560 }}>
             {(friendsData.filter(f => f.friendshipStatus === "pending" && !f.isInitiator).length === 0 ) ? (
@@ -256,6 +240,7 @@ export default function FriendsPage() {
           </div>
         )}
 
+        {/* ZAKŁADKA 3: Zaproszenia wysłane, oczekujące na odpowiedź znajomego */}
         {tab === "Pending" && (
           <div className="friends-big-grid">
             {friendsData.filter(f => f.friendshipStatus === "pending" && f.isInitiator).map(f => (
@@ -287,10 +272,12 @@ export default function FriendsPage() {
           </div>
         )}
 
+    {/* ZAKŁADKA 4: Zbiorczy, chronologiczny strumień aktywności wszystkich znajomych */}
     {tab === "Friends' Activity" && (
       <div className="friends-activity">
         {friendsData
           .filter(f => f.friendshipStatus === "accepted")
+          // flatMap łączy listy pojedynczych tablic aktywności znajomych w jedną, płaską tablicę nadrzędną
           .flatMap(f => {
             return f.activities.map(a => ({
               ...a,
@@ -298,8 +285,9 @@ export default function FriendsPage() {
               friendUsername: f.username
             }));
           })
+          // Sortowanie całej osi czasu od najświeższych wpisów (chronologia)
           .sort((b, c) => new Date(c.timestamp).getTime() - new Date(b.timestamp).getTime())
-          .slice(0, 10)
+          .slice(0, 10) // Wyświetlamy maksymalnie 10 ostatnich wydarzeń
           .map((a, i) => (
             <div className="fbc-activity-row" key={i}>
               <div className="fbc-activity-avatar">

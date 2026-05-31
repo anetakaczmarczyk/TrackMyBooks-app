@@ -2,9 +2,10 @@ import { Review } from "@/_components/Review";
 import BookDetail from "./bookDetail";
 import { BookByIdResponse } from "@/_components/bookInterface";
 
-
+// Funkcja pobierająca szczegółowe dane książki z backendu.
 async function fetchBookByIndex(slug: number): Promise<BookByIdResponse | null> {
   try {
+
     const response = await fetch("http://book-service:5000/api/books/bookById", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -18,6 +19,7 @@ async function fetchBookByIndex(slug: number): Promise<BookByIdResponse | null> 
 
     const data = await response.json();
     
+    // API Hardcover czasami zwraca tablicę jednoelementową lub płaski obiekt - ujednolicamy strukturę
     return Array.isArray(data) ? (data[0] || null) : (data || null);
 
   } catch (error) {
@@ -26,6 +28,7 @@ async function fetchBookByIndex(slug: number): Promise<BookByIdResponse | null> 
   }
 }
 
+// Pobieranie recenzji powiązanych z książką po stronie serwera
 async function fetchBookReviews(externalBookId: number): Promise<Review[] | []> {
   try {
     const response = await fetch(`http://book-service:5000/api/reviews/book/${externalBookId}`);
@@ -47,10 +50,12 @@ export default async function BookDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+  
   const book = await fetchBookByIndex(parseInt(slug));
   const reviews = await fetchBookReviews(parseInt(slug));
 
   if (!book) return <div className="inner-page">Book not found.</div>;
 
+  // Przekazanie wstępnie przygotowanych danych do interaktywnego komponentu klienckiego
   return <BookDetail bookbyId={book} reviews={reviews} />;
 }
