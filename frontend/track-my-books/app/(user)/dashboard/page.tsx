@@ -239,16 +239,16 @@ export default function DashboardPage() {
               <h2 className="stats-card-title">Reading Goal 2026</h2>
               <div className="dashboard-goal">
                 <div className="dashboard-goal-ring">
-                  <ProgressRing pct={reading.filter(r => r.status == 'read').length / (user?.books_Goal == 0? 1 : user?.books_Goal) * 100} />
+                  <ProgressRing pct={Number((reading.filter(r => r.status == 'read').length / (user?.books_Goal == 0? 1 : user?.books_Goal) * 100).toFixed(2))} />
                 </div>
                 <div>
                   <div className="dashboard-goal-numbers">
                     {}
                     <span>{reading.filter(r => r.status == 'read').length} / {user?.books_Goal}</span>
                   </div>
-                  <p className="kpi-sub">{reading.filter(r => r.status == 'read').length / (user?.books_Goal == 0? 1 : user?.books_Goal) * 100}% of yearly goal</p>
+                  <p className="kpi-sub">{(reading.filter(r => r.status == 'read').length / (user?.books_Goal == 0? 1 : user?.books_Goal) * 100).toFixed(2)}% of yearly goal</p>
                   <p className="kpi-sub" style={{ marginTop: 4 }}>
-                    { user?.books_Goal || 0 - reading.filter(r => r.status == 'read').length} books to go
+                    { user?.books_Goal - reading.filter(r => r.status == 'read').length || 0 - reading.filter(r => r.status == 'read').length} books to go
                   </p>
                 </div>
               </div>

@@ -6,11 +6,18 @@ import { Footer } from "@/_components/Footer";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Book } from "@/_components/bookInterface";
+import { useAuth } from "@/_context/AuthContext";
+import { useRouter } from "next/navigation";
 
 
 export default function Home() {
+  const { user, loading: authLoading, refreshUser } = useAuth();
+  const router = useRouter();
   const [trending, setTrending] = useState<Book[]>([]);
   const [news, setNews] = useState<Book[]>([]);
+  useEffect(() => {
+    if (user) router.push("/dashboard");
+  }, [user, authLoading, router]);
 
   useEffect(() => {
     async function fetchAllBooks() {

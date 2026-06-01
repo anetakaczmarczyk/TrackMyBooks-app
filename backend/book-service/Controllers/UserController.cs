@@ -168,14 +168,23 @@ public class UserController : ControllerBase
     [HttpPost("delete")]
     public async Task<IActionResult> DeleteAccount([FromBody] DeleteAccountRequest request)
     {
+        // 1. Pobranie danych zalogowanego użytkownika
         var user = await _userRepository.GetUserByEmail(request.Email);
+        
+        // 2. Podwójna weryfikacja intencji usunięcia konta:
+        // a) sprawdzenie poprawności hasła BCryptem,
+        // b) zweryfikowanie poprawnego, ręcznego wpisania frazy blokującej "DELETE ACCOUNT"
         if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.Password_Hash) || request.Confirmation != "DELETE ACCOUNT")
         {
             Console.WriteLine($"Delete account failed: user={user}, confirmationValid={request.Confirmation == "DELETE ACCOUNT"}");
             return Unauthorized("Invalid password");
         }
+        
+        // 3. Wywołanie repozytorium w celu bezpowrotnego skasowania wszystkich danych transakcyjnych użytkownika
         await _userRepository.DeleteUser(request);
-        Logout(); // Automatyczne unieważnienie sesji (ciasteczka) po usunięciu konta
+        
+        // 4. Automatyczne unieważnienie sesji (usunięcie ciasteczka JWT z przeglądarki)
+        Logout(); 
         return Ok("Account deleted!");
     }
 

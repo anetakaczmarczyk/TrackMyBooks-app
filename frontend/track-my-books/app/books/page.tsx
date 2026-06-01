@@ -91,21 +91,20 @@ export default function BooksPage() {
 
   useEffect(() => { setPage(1); }, [genre, sort, query]);
 
-  // Filtrowanie i sortowanie tysięcy obiektów w pamięci klienta
-  // Dzięki useMemo proces ten wykonuje się TYLKO wtedy, gdy zmieni się baza książek, wyszukiwana fraza, gatunek lub sortowanie
-  // Zapobiega to opóźnieniu podczas wpisywania tekstu w wyszukiwarkę
-  const filtered = useMemo(() => {
-    return allBooks
-      .filter(b => genre === "All" || b.cached_Tags.Genre?.some((g: GenreTag) => g.tag === genre))
-      .filter(b => !query || b.title.toLowerCase().includes(query.toLowerCase()) || b.contributions[0]?.author?.name.toLowerCase().includes(query.toLowerCase()))
-      .sort((a, b) => {
-        if (sort === "Rating: highest") return b.rating - a.rating;
-        if (sort === "Title: A–Z") return a.title.localeCompare(b.title);
-        if (sort === "Newest first") return (b.release_Date || "0000-00-00").localeCompare(a.release_Date || "0000-00-00");
-        if (sort === "Oldest first") return (a.release_Date || "9999-99-99").localeCompare(b.release_Date || "9999-99-99");
-        return 0;
-      });
-  }, [allBooks, genre, sort, query]);
+// Wykorzystanie useMemo zapobiega ponownemu filtrowaniu i sortowaniu tysięcy książek przy każdym renderze.
+// Zapobiega to opóźnieniu (input lag) podczas wpisywania tekstu w wyszukiwarkę.
+const filtered = useMemo(() => {
+  return allBooks
+    .filter(b => genre === "All" || b.cached_Tags.Genre?.some((g: GenreTag) => g.tag === genre))
+    .filter(b => !query || b.title.toLowerCase().includes(query.toLowerCase()) || b.contributions[0]?.author?.name.toLowerCase().includes(query.toLowerCase()))
+    .sort((a, b) => {
+      if (sort === "Rating: highest") return b.rating - a.rating;
+      if (sort === "Title: A–Z") return a.title.localeCompare(b.title);
+      if (sort === "Newest first") return (b.release_Date || "0000-00-00").localeCompare(a.release_Date || "0000-00-00");
+      if (sort === "Oldest first") return (a.release_Date || "9999-99-99").localeCompare(b.release_Date || "9999-99-99");
+      return 0;
+    });
+}, [allBooks, genre, sort, query]); // Efekt przelicza się tylko przy zmianie tych zależności
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
   
