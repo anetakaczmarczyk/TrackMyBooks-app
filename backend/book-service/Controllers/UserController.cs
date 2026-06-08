@@ -224,15 +224,12 @@ public class UserController : ControllerBase
     public async Task<IActionResult> RespondToInvitation([FromBody] RespondToInvitationRequest request)
     {
         if (request.UserUsername == request.FriendUsername)
-        {
             return BadRequest("Invalid operation.");
-        }
-        var friends = await _userRepository.GetFriendsData(request.UserUsername);
-        if (!friends.Any(f => f.Username == request.FriendUsername))
-        {
-            return BadRequest("No invitation found from this user.");
-        }
-        await _userRepository.RespondToInvitation(request);
+        bool success = await _userRepository.RespondToInvitation(request);
+        
+        if (!success)
+            return BadRequest("No invitation found or invalid operation.");
+
         return Ok("Invitation response recorded!");
     }
 
@@ -240,15 +237,13 @@ public class UserController : ControllerBase
     public async Task<IActionResult> RemoveFriend([FromBody] SendInvitationRequest request)
     {
         if (request.UserUsername == request.FriendUsername)
-        {
             return BadRequest("Invalid operation.");
-        }
-        var friends = await _userRepository.GetFriendsData(request.UserUsername);
-        if (!friends.Any(f => f.Username == request.FriendUsername))
-        {
-            return BadRequest("This user is not in your friends list.");
-        }
-        await _userRepository.RemoveFriend(request);
+
+        bool wasRemoved = await _userRepository.RemoveFriend(request);
+        
+        if (!wasRemoved)
+            return BadRequest("This user is not in your friends list or doesn't exist.");
+
         return Ok("Friend removed!");
     }
 
@@ -257,7 +252,6 @@ public class UserController : ControllerBase
     [HttpGet("{username}")]
     public async Task<IActionResult> GetUserByUsername([FromRoute] string username)
     {
-        Console.WriteLine($"Fetching profile for username: {username}");
         var user = await _userRepository.GetUserByUsername(username);
         if (user == null)
         {
@@ -297,32 +291,26 @@ public class UserController : ControllerBase
     [HttpGet("getDashboardData/{username}")]
     public async Task<IActionResult> GetDashboardData([FromRoute] string username)
     {
-        var userReviews = await _reviewRepository.GetReviewsByUsername(username);
-        var friendsData = await _userRepository.GetFriendsData(username);
-
-        var userReadingStatuses = await _booksdbRepository.GetUserReadingStatuses(username);
-        var userReading = new List<UserLibraryItemDto>();
-        foreach (var status in userReadingStatuses)
-        {
+        var dashboard = await _userRepository.GetDashboardData(username);
+        
+        var statusTasks = dashboard.UserReading.Select(async status => {
             var bookData = await _client.GetBookById(status.Book_Id);
-            if (bookData != null && bookData.Count > 0)
-            {
-                userReading.Add(new UserLibraryItemDto
-                {
-                    Status = status.Status,
-                    Progress = status.Progress,
-                    Start_Date = status.Start_Date,
-                    End_Date = status.End_Date,
-                    Book = bookData[0]
-                });
-            }
-        }
+            return new UserLibraryItemDto {
+                Status = status.Status,
+                Progress = status.Progress,
+                Start_Date = status.Start_Date,
+                End_Date = status.End_Date,
+                Book = (bookData != null && bookData.Count > 0) ? bookData[0] : null
+            };
+        });
+
+        var userReading = await Task.WhenAll(statusTasks);
 
         return Ok(new { 
-            userReviews = userReviews,
-            userReading = userReading,
-            friendsData = friendsData
-         });
+            userReviews = dashboard.UserReviews,
+            userReading = userReading.ToList(),
+            friendsData = dashboard.FriendsData
+        });
     }
 
 }

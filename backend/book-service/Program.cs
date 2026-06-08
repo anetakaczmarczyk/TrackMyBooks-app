@@ -4,6 +4,7 @@ using DbUp;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using book_service.Repositories;
+using Dapper;
 
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -91,6 +92,10 @@ if (upgrader.IsUpgradeRequired())
     upgrader.PerformUpgrade();
     Console.WriteLine("Database upgrade performed.");
 }
+
+SqlMapper.AddTypeHandler(new JsonTypeHandler<List<FriendReadingStatusDto>>());
+SqlMapper.AddTypeHandler(new JsonTypeHandler<List<FriendActivityDto>>());
+SqlMapper.AddTypeHandler(new JsonTypeHandler<List<FriendReviewDto>>());
 
 // Rejestracja naszych interfejsów w kontenerze IoC
 // AddScoped oznacza, że dla każdego żądania HTTP powstanie dokładnie jedna instancja danego repozytorium

@@ -15,7 +15,8 @@ public interface IUserRepository
     Task UpdatePassword(ChangePasswordRequest request);
     Task DeleteUser(DeleteAccountRequest request);
     Task SendInvitation(SendInvitationRequest request);
-    Task RespondToInvitation(RespondToInvitationRequest request);
-    Task RemoveFriend(SendInvitationRequest request);
+    Task<bool> RespondToInvitation(RespondToInvitationRequest request);
+    Task<bool> RemoveFriend(SendInvitationRequest request);
     Task<IEnumerable<FriendWithBooksDto>> GetFriendsData(string username);
+    Task<DashboardDataDTO> GetDashboardData(string username);
 }

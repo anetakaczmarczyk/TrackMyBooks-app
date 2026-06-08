@@ -9,6 +9,7 @@ import { Footer } from "@/_components/Footer";
 import { Review } from "@/_components/Review";
 import { LibraryItem } from "@/_components/LibraryItem";
 import { FriendsData } from "@/_components/Friends";
+import { FriendActivityRaw } from "@/_components/Activity";
 
 // Komponent ProgressRing rysuje kołowy wskaźnik postępu (radial progress) przy użyciu czystego SVG
 function ProgressRing({ pct }: { pct: number }) {
@@ -43,7 +44,7 @@ export default function DashboardPage() {
 
   const [reading, setReading]       = useState<LibraryItem[]>([]);
   const [reviews, setReviews] = useState<Review[]>([])
-  const [friendsData, setFriendsData] = useState<FriendsData[]>([])
+  const [friendsData, setFriendsData] = useState<FriendActivityRaw[]>([])
 
   // Jeśli sesja się załadowała (authLoading === false) i użytkownik nie jest zalogowany, przekierowujemy go na stronę główną.
   useEffect(() => {
@@ -206,21 +207,13 @@ export default function DashboardPage() {
               </div>
               <div className="activity-feed">
               {friendsData
-                .filter(f => f.friendshipStatus === "accepted")
-                .flatMap(f => {
-                  return f.activities.map(a => ({
-                    ...a,
-                    friendName: f.name || f.username,
-                    friendUsername: f.username
-                  }));
-                })
                 .sort((b, c) => new Date(c.timestamp).getTime() - new Date(b.timestamp).getTime())
                 .slice(0, 4)
                 .map((a, index) => (
                   <div className="activity-row" key={index}>
-                    <div className="fbc-activity-avatar">{a.friendName.split(" ").map(n => n.charAt(0).toUpperCase()).join("").slice(0, 2)}</div>
+                    <div className="fbc-activity-avatar">{a.username.split(" ").map(n => n.charAt(0).toUpperCase()).join("").slice(0, 2)}</div>
                     <div className="activity-text">
-                      <span style={{ color: "var(--text)", fontWeight: 500 }}>{a.friendName}</span>
+                      <span style={{ color: "var(--text)", fontWeight: 500 }}>{a.username}</span>
                       {" "}{a.activityType}{" "}
                       <em style={{ color: "var(--gold)", fontStyle: "normal" }}>"{a.bookTitle}"</em>
                     </div>

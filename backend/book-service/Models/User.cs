@@ -62,7 +62,12 @@ public class FriendWithBooksDto
     public List<FriendActivityDto> Activities { get; set; } = new();
     public List<FriendReviewDto> Reviews { get; set; } = new();
 }
-
+public class DashboardDataDTO
+{
+    public List<Review> UserReviews { get; set; } = new();
+    public List<ReadingStatus> UserReading { get; set; } = new();
+    public List<RawActivityRow> FriendsData { get; set; } = new();
+}
 public class FriendActivityDto
 {
     public string ActivityType { get; set; } = string.Empty;

@@ -7,7 +7,7 @@ namespace book_service.Repositories;
 public interface IReviewRepository
 {
     Task<IEnumerable<Review>> GetReviewsForBook(int bookId);
-    Task AddReview(Review review);
-    Task UpdateReview(int id, Review review);
     Task<IEnumerable<Review>> GetReviewsByUsername(string username);
+    Task AddReviewWithActivity(Review review);
+    Task UpdateReviewWithActivity(int id, Review review);
 }

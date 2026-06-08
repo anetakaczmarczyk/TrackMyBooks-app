@@ -13,31 +13,81 @@ public class ReviewRepository : IReviewRepository
     public async Task<IEnumerable<Review>> GetReviewsForBook(int bookId)
     {
         using var connection = _db.CreateConnection();
-        var query = "SELECT * FROM Reviews WHERE Book_Id = @Book_Id ORDER BY Timestamp DESC";
+        var query = @"
+            SELECT Id, Book_Id, Username, Rating, Review_Text, Timestamp
+            FROM Reviews
+            WHERE Book_Id = @Book_Id
+            ORDER BY Timestamp DESC";
         return await connection.QueryAsync<Review>(query, new { Book_Id = bookId });
     }
 
-    public async Task AddReview(Review review)
+
+    public async Task AddReviewWithActivity(Review review)
     {
         using var connection = _db.CreateConnection();
         // Funkcja TRIM() w SQL oczyszcza tekst recenzji ze zbędnych spacji i znaków nowej linii na początku oraz końcu tekstu
-        var query = "INSERT INTO Reviews (Book_Id, Username, Rating, Review_Text) VALUES (@Book_Id, @Username, @Rating, TRIM(@Review_Text))";
+        var query = @"
+            WITH inserted AS (
+                INSERT INTO Reviews (Book_Id, Username, Rating, Review_Text) 
+                VALUES (@Book_Id, @Username, @Rating, TRIM(@Review_Text))
+                RETURNING Username
+            )
+            INSERT INTO UserActivity (Username, Book_Title, Activity_Type)
+            SELECT 
+                @Username, 
+                @Book_Title, 
+                CASE 
+                    WHEN TRIM(COALESCE(@Review_Text, '')) = '' THEN 'rated' 
+                    ELSE 'reviewed' 
+                END
+            FROM inserted;";
+    
         await connection.ExecuteAsync(query, review);
     }
 
-    public async Task UpdateReview(int id, Review review)
+    public async Task UpdateReviewWithActivity(int id, Review review)
     {
         using var connection = _db.CreateConnection();
-        // Podczas edycji recenzji, ręcznie wymuszamy aktualizację kolumny Timestamp
-        var query = "UPDATE Reviews SET Rating = @Rating, Review_Text = TRIM(@Review_Text), Timestamp = CURRENT_TIMESTAMP WHERE Id = @Id";
-        await connection.ExecuteAsync(query, new { review.Rating, review.Review_Text, Id = id });
+
+        var query = @"
+            WITH updated AS (
+                UPDATE Reviews 
+                SET Rating = @Rating, 
+                    Review_Text = TRIM(@Review_Text), 
+                    Timestamp = CURRENT_TIMESTAMP 
+                WHERE Id = @Id
+                RETURNING Username
+            )
+            INSERT INTO UserActivity (Username, Book_Title, Activity_Type)
+            SELECT 
+                @Username, 
+                @Book_Title, 
+                CASE 
+                    WHEN TRIM(COALESCE(@Review_Text, '')) = '' THEN 'updated rating' 
+                    ELSE 'updated review' 
+                END
+            FROM updated;";
+
+        await connection.ExecuteAsync(query, new 
+        { 
+            Id = id, 
+            review.Username, 
+            review.Rating, 
+            review.Review_Text, 
+            review.Book_Title 
+        });
     }
 
     // Pobiera najnowsze opinie napisane przez danego użytkownika. 
     public async Task<IEnumerable<Review>> GetReviewsByUsername(string username)
     {
         using var connection = _db.CreateConnection();
-        var query = "SELECT * FROM Reviews WHERE Username = @Username ORDER BY Timestamp DESC LIMIT 10";
+        var query = @"
+            SELECT Id, Book_Id, Username, Rating, Review_Text, Timestamp
+            FROM Reviews 
+            WHERE Username = @Username
+            ORDER BY Timestamp
+            DESC LIMIT 10";
         return await connection.QueryAsync<Review>(query, new { Username = username });
     }
 

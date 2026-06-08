@@ -19,4 +19,5 @@ public interface IBooksdbRepository
     Task<ReadingData> GetBookReadingData(int bookId, string username);
     Task CreateSession(int readingStatusId, int pagesStarted, int pagesFinished, int durationMinutes, DateTime logDate);
     Task CreateNote(int readingStatusId, string note, int pageNumber);
+    Task ProcessReadingStatusTransaction(string username, int bookId, string bookTitle, string status, int progress);
 }

@@ -202,33 +202,21 @@ public class BooksController : ControllerBase
     [HttpPut("addToReadingStatus")]
     public async Task<IActionResult> AddBookToReadingStatus([FromBody] AddToReadingStatusRequest request)
     {
-        // Obsługa statusów dodających/aktualizujących
-        if (request.Status == "read" || request.Status == "reading" || request.Status == "wishlist" || request.Status == "abandoned")
+        if (request == null)
         {
-            var userLists = await _booksdbRepository.GetUserReadingStatus(request.Username);
-            var existingEntry = userLists.FirstOrDefault(l => l.Book_Id == request.Book_Id);
-            
-            await _booksdbRepository.AddToActivity(request.Username, request.Book_Title, request.Status);
-            
-            if (existingEntry != null)
-            {
-                await _booksdbRepository.UpdateReadingStatus(request.Username, request.Book_Id, request.Status, request.Progress);
-                return Ok("Book status updated in list!");
-            }
-            else
-            {   
-                await _booksdbRepository.AddBookToReadingStatus(request.Username, request.Book_Id, request.Status, request.Progress);
-                return Ok("Book added to list!");
-            }
-        }
-        else
-        {
-            // Kasowanie książki z biblioteki usera
-            await _booksdbRepository.RemoveBookFromReadingStatus(request.Username, request.Book_Id);
-            await _booksdbRepository.AddToActivity(request.Username, request.Book_Title, "removed");
+            return BadRequest("Invalid request.");
         }
 
-        return Ok("Book added to list!");
+        // Wywołujemy jedną, bezpieczną transakcję, która zajmie się wszystkim (dodaniem, edycją lub usunięciem)
+        await _booksdbRepository.ProcessReadingStatusTransaction(
+            request.Username, 
+            request.Book_Id, 
+            request.Book_Title, 
+            request.Status, 
+            request.Progress
+        );
+
+        return Ok("Book list status successfully processed.");
     }
 
     [HttpPost("updateProgress")]
