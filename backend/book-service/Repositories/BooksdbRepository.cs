@@ -67,23 +67,23 @@ public async Task ProcessReadingStatusTransaction(string username, int bookId, s
         BEGIN;
 
         INSERT INTO ReadingStatus (username, book_id, status, start_date, end_date, progress)
-        SELECT 
-            @Username, 
-            @BookId, 
-            @Status, 
-            CASE WHEN @Status IN ('reading', 'abandoned', 'read') THEN CURRENT_DATE ELSE NULL END,
-            CASE WHEN @Status = 'read' THEN CURRENT_DATE ELSE NULL END,
-            CASE WHEN @Status = 'read' THEN @Progress ELSE 0 END
+            SELECT 
+                @Username, 
+                @BookId, 
+                @Status, 
+                CASE WHEN @Status IN ('reading', 'abandoned', 'read') THEN CURRENT_DATE ELSE NULL END,
+                CASE WHEN @Status = 'read' THEN CURRENT_DATE ELSE NULL END,
+                CASE WHEN @Status = 'read' THEN @Progress ELSE 0 END
         WHERE @Status IN ('read', 'reading', 'wishlist', 'abandoned')
         ON CONFLICT (username, book_id) 
-        DO UPDATE SET 
-            status = EXCLUDED.status,
-            progress = EXCLUDED.progress,
-            end_date = EXCLUDED.end_date,
-            start_date = CASE 
-                WHEN EXCLUDED.status IN ('reading', 'abandoned') THEN CURRENT_DATE 
-                ELSE ReadingStatus.start_date 
-            END;
+            DO UPDATE SET 
+                status = EXCLUDED.status,
+                progress = EXCLUDED.progress,
+                end_date = EXCLUDED.end_date,
+                start_date = 
+                CASE WHEN EXCLUDED.status IN ('reading', 'abandoned') THEN CURRENT_DATE 
+                    ELSE ReadingStatus.start_date 
+                END;
 
         DELETE FROM ReadingStatus 
         WHERE username = @Username 
@@ -220,7 +220,6 @@ public async Task ProcessReadingStatusTransaction(string username, int bookId, s
     public async Task<ReadingData> GetBookReadingData(int bookId, string username)
     {
         using var connection = _db.CreateConnection();
-        
         var query = @"
             SELECT 
             rs.id AS Id, 

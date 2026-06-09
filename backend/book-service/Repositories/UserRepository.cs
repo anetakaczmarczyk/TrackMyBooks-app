@@ -98,9 +98,9 @@ public class UserRepository : IUserRepository
     public async Task<IEnumerable<FriendWithBooksDto>> GetFriendsData(string username)
     {
         using var connection = _db.CreateConnection();
-        
+
         var sql = @"
-            SELECT 
+        SELECT 
             f_data.friend_username AS Username,
             f_data.friend_name AS Name,
             f_data.status AS FriendshipStatus,
